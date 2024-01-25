@@ -21,8 +21,9 @@ float R1 = 10000;
 float logR2, R2, T, Tc;
 float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
-
+float goalAngle = 90;
 float current;
+bool increasing = true;
 
 struct receivedAngle {
   float position;
@@ -57,11 +58,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   //digitalWrite(OUT1, HIGH);
-  digitalWrite(OUT2,LOW);
+  // digitalWrite(OUT2,LOW);
 
-  //digitalWrite(OUT1, HIGH);
-  analogWrite(OUT1,255);
-  //digitalWrite(MPSleep, HIGH);
+  // //digitalWrite(OUT1, HIGH);
+  // analogWrite(OUT1,255);
+  // //digitalWrite(MPSleep, HIGH);
 
 
 
@@ -80,11 +81,28 @@ void loop() {
   // Serial.println(currentF);
 
   float atPos =analogRead(PotValue);
+  atPos = map(atPos, 0,1023,0,360);
   Serial.println(map(atPos, 0,1023,0,360));
 
-
+  if (atPos < goalAngle){
+    digitalWrite(OUT2,LOW);
+    analogWrite(OUT1,60);
+  }else if (atPos > goalAngle){
+    analogWrite(OUT2,60);
+    digitalWrite(OUT1,LOW);
+  }else{
+    digitalWrite(OUT1, HIGH);
+    digitalWrite(OUT2, HIGH);
+  }
   //Position
-
+  if (goalAngle < 160 and increasing){
+    goalAngle++;
+  }
+  else if (goalAngle >= 155 or goalAngle <= 15){
+    increasing = !(increasing);
+  }else if(goalAngle > 15 and !(increasing)){
+    goalAngle--;
+  }
 
   // //PWM input
   // int pwmValue = pulseIn(PWMIN, HIGH);  // Read PWM signal duration in microseconds
