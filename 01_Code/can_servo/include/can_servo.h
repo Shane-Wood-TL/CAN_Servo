@@ -11,7 +11,7 @@ extern SemaphoreHandle_t current_temperature_mutex;
 extern float last_motor_temperature;
 
 extern SemaphoreHandle_t current_position_mutex;
-extern uint16_t last_positon_reading;
+extern float last_positon_reading;
 
 
 //values to receive

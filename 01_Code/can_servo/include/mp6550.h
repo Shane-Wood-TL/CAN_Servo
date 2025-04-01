@@ -3,8 +3,8 @@
 #include "all_includes.h"
 
 
-extern uint16_t current_position;
-extern uint16_t goal_position;
+extern float current_position;
+extern float goal_position;
 extern float current_usage;
 extern SemaphoreHandle_t current_position_mutex;
 extern SemaphoreHandle_t goal_position_mutex;

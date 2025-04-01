@@ -1,6 +1,6 @@
 #include "../include/servo.h"
 
-servo::servo(uint16_t target_position, uint8_t *motor_status, int16_t *motor_offset, float *current_limit, float *temperature_limit, bool *direction, float *time_to_move, uint16_t current_position, float current_temperature){
+servo::servo(uint16_t target_position, uint8_t *motor_status, int16_t *motor_offset, float *current_limit, float *temperature_limit, bool *direction, float *time_to_move, float current_position, float current_temperature){
     this->target_position = target_position;
     this->motor_status = motor_status;
     this->motor_offset = motor_offset;

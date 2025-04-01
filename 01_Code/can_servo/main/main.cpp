@@ -14,7 +14,7 @@ SemaphoreHandle_t current_temperature_mutex;
 float last_motor_temperature = 0;
 
 SemaphoreHandle_t current_position_mutex;
-uint16_t last_positon_reading = 0;
+float current_position = 0;
 
 SemaphoreHandle_t time_to_move_mutex;
 float time_to_move_value = 0;
@@ -55,6 +55,8 @@ adc_oneshot_chan_cfg_t adc_config = {
 
 
 
+#define max_raw_position 3297
+#define min_raw_position 0
 
 extern "C" void app_main(void)
 {
@@ -70,6 +72,10 @@ extern "C" void app_main(void)
     target_position_mutex = xSemaphoreCreateMutex();
 
 
+    gpio_set_direction(in1_pin, GPIO_MODE_OUTPUT);
+    gpio_set_direction(in2_pin, GPIO_MODE_OUTPUT);
+    gpio_set_direction(sleep_pin, GPIO_MODE_OUTPUT);
+
 
     ESP_ERROR_CHECK(adc_oneshot_new_unit(&adc1_init_config, &adc_handle));
     ESP_ERROR_CHECK(adc_oneshot_config_channel(adc_handle, current_sense_channel, &adc_config));
@@ -78,9 +84,9 @@ extern "C" void app_main(void)
 
 
 
-    xTaskCreate(read_temperature, "read_temperature", 2048, NULL, 5, NULL);
-    xTaskCreate(read_position, "read_position", 2048, NULL, 5, NULL);
-    //xTaskCreate(drive_motor, "drive_motor", 2048, NULL, 5, NULL);
+    //xTaskCreate(read_temperature, "read_temperature", 2048, NULL, 5, NULL);
+    //xTaskCreate(read_position, "read_position", 2048, NULL, 5, NULL);
+    xTaskCreate(drive_motor, "drive_motor", 2048, NULL, 5, NULL);
     //xTaskCreate(can_bus, "can_bus", 2048, NULL, 5, NULL);
 
     int adc_read0, adc_read1;
@@ -88,8 +94,8 @@ extern "C" void app_main(void)
 
     
     for(;;){
-        ESP_ERROR_CHECK(adc_oneshot_read(adc_handle, ADC_CHANNEL_0, &adc_read0));
-        ESP_ERROR_CHECK(adc_oneshot_read(adc_handle, ADC_CHANNEL_4, &adc_read1));
+        //ESP_ERROR_CHECK(adc_oneshot_read(adc_handle, ADC_CHANNEL_0, &adc_read0));
+        //ESP_ERROR_CHECK(adc_oneshot_read(adc_handle, ADC_CHANNEL_4, &adc_read1));
         //printf("Adc channel-0 raw read result %d \n", adc_read0);
         //printf("Adc channel-1 raw read result %d \n", adc_read1);
         //printf("\n\n");
@@ -124,41 +130,48 @@ void read_position(void *pv){
     for(;;){
         xSemaphoreTake(current_position_mutex, portMAX_DELAY);
         adc_oneshot_read(adc_handle, position_channel, &raw_position_reading);
-        printf("Position: %d\n", raw_position_reading);
+        current_position = raw_position_reading/(max_raw_position/360.0f);
+        //printf("Angle: %f\n", last_positon_reading);
         //read position
         xSemaphoreGive(current_position_mutex);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
 
 void drive_motor(void *pv){
-    ledc_channel_config_t in1_channel = {
-        .gpio_num = in1_pin,
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .channel = LEDC_CHANNEL_0,
-        .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = LEDC_TIMER_0,
-        .duty = 0,
-        .hpoint = 0
-    };
+    // ledc_channel_config_t in1_channel = {
+    //     .gpio_num = in1_pin,
+    //     .speed_mode = LEDC_LOW_SPEED_MODE,
+    //     .channel = LEDC_CHANNEL_0,
+    //     .intr_type = LEDC_INTR_DISABLE,
+    //     .timer_sel = LEDC_TIMER_0,
+    //     .duty = 0,
+    //     .hpoint = 0
+    // };
 
-    ledc_timer_config_t in1_timer_config = {
-    .speed_mode = LEDC_LOW_SPEED_MODE,
-    .duty_resolution = LEDC_TIMER_12_BIT,
-    .timer_num  = LEDC_TIMER_0,
-    .freq_hz    = 100,              
-    };
+    // ledc_timer_config_t in1_timer_config = {
+    // .speed_mode = LEDC_LOW_SPEED_MODE,
+    // .duty_resolution = LEDC_TIMER_12_BIT,
+    // .timer_num  = LEDC_TIMER_0,
+    // .freq_hz    = 100,              
+    // };
 
-    ledc_timer_config(&in1_timer_config);
-    ledc_channel_config(&in1_channel);
+    //ledc_timer_config(&in1_timer_config);
+    //ledc_channel_config(&in1_channel);
     //mp6550(gpio_num_t, gpio_num_t, gpio_num_t, gpio_num_t, adc_channel_t, ledc_channel_t, ledc_channel_t);
-    mp6550 (in1_pin, in2_pin, sleep_pin, current_sense_pin, current_sense_channel, LEDC_CHANNEL_0, LEDC_CHANNEL_1);
-    
+    //mp6550 motor(in1_pin, in2_pin, sleep_pin, current_sense_pin, current_sense_channel, LEDC_CHANNEL_0, LEDC_CHANNEL_1);
+
     
     for(;;){       
         //drive motor
         //motor.update();
+        //motor.wake();
+        //motor.driveMotor(500);
+        printf("Driving Motor\n");
+        gpio_set_level(in1_pin, true);
+        gpio_set_level(in2_pin, false);
+        gpio_set_level(sleep_pin, true);
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }

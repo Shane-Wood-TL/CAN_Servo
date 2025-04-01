@@ -7,6 +7,12 @@ mp6550::mp6550(gpio_num_t in1_p, gpio_num_t in2_p, gpio_num_t sleep_p, gpio_num_
     this->current_sense_channel_c = current_sense_channel_c;
     this->in1_ledc_channel = in1_ledc_channel;
     this->in2_ledc_channel = in2_ledc_channel;
+
+
+    gpio_set_direction(in1_pin, GPIO_MODE_OUTPUT);
+    gpio_set_direction(in2_pin, GPIO_MODE_OUTPUT);
+    gpio_set_direction(sleep_pin, GPIO_MODE_OUTPUT);
+
     wake();
 }
 
@@ -39,10 +45,10 @@ void mp6550::driveMotor(int16_t speed){
 }
 
 void mp6550::sleep(){
-    gpio_set_level(this->sleep_p, 1);
+    gpio_set_level(this->sleep_p, 0);
 }
 void mp6550::wake(){
-    gpio_set_level(this->sleep_p, 0);
+    gpio_set_level(this->sleep_p, 1);
 }
 float mp6550::read_current(){
     uint16_t raw_reading = 0;//adc1_get_raw(this->current_sense_channel_c);
