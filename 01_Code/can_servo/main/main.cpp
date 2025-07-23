@@ -8,13 +8,10 @@ void read_position(void *pv);
 void drive_motor(void *pv);
 void can_bus(void *pv);
 void read_current(void *pv);
+void led_strip_driver_task(void *pv);
 
 float get_shortest_angle(float target, float current);
 
-
-
-
-led_strip_driver* led_strip = nullptr;
 
 
 SemaphoreHandle_t motor_speed_mutex;
@@ -61,6 +58,12 @@ float pid_P = 85.0f;
 float pid_I = 7.8f;
 float pid_D = 30.0f;
 
+SemaphoreHandle_t LED_RGB_values_mutex;
+float led_r = 255.0f;
+float led_g = 0.0f;
+float led_b = 0.0f;
+
+
 mp6550 motor(in1_pin, in2_pin, sleep_pin, current_sense_pin, current_sense_channel, LEDC_CHANNEL_0, LEDC_CHANNEL_1);
 
 
@@ -88,14 +91,15 @@ adc_oneshot_chan_cfg_t adc_config = {
 extern "C" void app_main(void)
 {
     //Motor Status variables
-    motor_speed_mutex        = xSemaphoreCreateMutex();
-    motor_status_mutex       = xSemaphoreCreateMutex();
-    current_mutex            = xSemaphoreCreateMutex();
-    temperature_mutex        = xSemaphoreCreateMutex();
-    motor_offset_mutex       = xSemaphoreCreateMutex();
+    motor_speed_mutex                 = xSemaphoreCreateMutex();
+    motor_status_mutex                = xSemaphoreCreateMutex();
+    current_mutex                     = xSemaphoreCreateMutex();
+    temperature_mutex                 = xSemaphoreCreateMutex();
+    motor_offset_mutex                = xSemaphoreCreateMutex();
     target_angle_velocity_mutex       = xSemaphoreCreateMutex();
     current_angle_velocity_mutex      = xSemaphoreCreateMutex();
-
+    PID_values_mutex                  = xSemaphoreCreateMutex();
+    LED_RGB_values_mutex              = xSemaphoreCreateMutex();
 
     gpio_set_direction(in1_pin, GPIO_MODE_OUTPUT);
     gpio_set_direction(in2_pin, GPIO_MODE_OUTPUT);
@@ -115,8 +119,6 @@ extern "C" void app_main(void)
     gpio_reset_pin(in2_pin);
     gpio_reset_pin(sleep_pin);
 
-    //gpio_reset_pin(can_RX_pin);
-    //gpio_reset_pin(can_TX_pin);
     
     gpio_set_direction(sleep_pin, GPIO_MODE_OUTPUT);
 
@@ -153,35 +155,20 @@ extern "C" void app_main(void)
 
 
 
-
-
-
-    //xTaskCreate(read_temperature, "read_temperature", 2048, NULL, 5, NULL);
+    xTaskCreate(read_temperature, "read_temperature", 2048, NULL, 5, NULL);
     xTaskCreate(read_current, "read_current", 2048, NULL, 5, NULL);
     xTaskCreate(read_position, "read_position", 2048, NULL, 5, NULL);
     xTaskCreate(drive_motor, "drive_motor", 2048, NULL, 5, NULL);
     xTaskCreate(can_bus, "can_bus", 10000, NULL, 5, NULL);
+    xTaskCreate(led_strip_driver_task, "led_strip_driver_task", 2048, NULL, 10, NULL);
+        
 
     int adc_read0, adc_read1;
     int mv_output;
 
-    
-
-    led_strip = new led_strip_driver(ONBOARD_RGB_LED, 1);
 
     for(;;){
-        //ESP_ERROR_CHECK(adc_oneshot_read(adc_handle, ADC_CHANNEL_0, &adc_read0));
-        //ESP_ERROR_CHECK(adc_oneshot_read(adc_handle, ADC_CHANNEL_4, &adc_read1));
-        //printf("Adc channel-0 raw read result %d \n", adc_read0);
-        //printf("Adc channel-1 raw read result %d \n", adc_read1);
-        //printf("\n\n");
-        //adc_cali_raw_to_voltage(cali_handle, adc_read1, &mv_output);
-        //printf("ADC milivold output %d \n", mv_output);
-        //led_strip->set_color(255,255,255, 0, 0);
-        //R = G
-        //G = R
-        //B = B
-        vTaspid_Delay(100);
+        vTaskDelay(100);
     }
 }
 
@@ -191,7 +178,7 @@ extern "C" void app_main(void)
 void read_temperature(void *pv){
     int raw_temp_reading;
     for(;;){
-        xSemaphoreTake(temperature_mutex, portMAX_DELAY);
+       
         adc_oneshot_read(adc_handle, temp_sense_channel, &raw_temp_reading);
         float temp_resistance = 10000.0f * ((MAX_ADC_FLOAT / (float)raw_temp_reading) - 1.0f);
 
@@ -199,9 +186,26 @@ void read_temperature(void *pv){
         float T =  1.0f / ( 0.001129148 + ( 0.000234125 * logR2 ) + ( 0.0000000876741 * logR2 * logR2 * logR2) ) ;
         T = T - K_TO_C;
 
+         xSemaphoreTake(temperature_mutex, portMAX_DELAY);
+        last_motor_temperature = T;
+
+        if(last_motor_temperature > max_motor_temperature){
+            max_motor_temperature = last_motor_temperature;
+        }
         //printf("Temperature: %f\n", T);
+
+        if(last_motor_temperature > motor_temperature_limit){
+            is_over_temp = true;
+            xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
+            motor_status = OVERTEMP;
+            xSemaphoreGive(motor_status_mutex);
+        }else{
+            is_over_temp = false;
+        }
+        
         xSemaphoreGive(temperature_mutex);
-        vTaspid_Delay(pdMS_TO_TICKS(1000));
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -215,7 +219,7 @@ void read_position(void *pv){
         //printf("Angle: %f\n", current_angle);
         //read position
         xSemaphoreGive(current_angle_velocity_mutex);
-        vTaspid_Delay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -259,9 +263,11 @@ void read_current(void *pv){
             xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
             motor_status = OVERCURRENT;
             xSemaphoreGive(motor_status_mutex);
+        }else{
+            is_over_current = false;
         }
         xSemaphoreGive(current_mutex);
-        vTaspid_Delay(pdMS_TO_TICKS(30));
+        vTaskDelay(pdMS_TO_TICKS(30));
     }
 }
 float get_shortest_angle(float target, float current) {
@@ -377,7 +383,7 @@ void drive_motor(void *pv){
             motor.driveMotor(last_motor_speed);
             
         }
-        vTaspid_Delay(pdMS_TO_TICKS(10));        
+        vTaskDelay(pdMS_TO_TICKS(10));        
     }
 }
 
@@ -426,6 +432,26 @@ void can_bus(void *pv){
     can_servo can_bus_driver(node_id);
     for(;;){
         can_bus_driver.receive_message();
-        vTaspid_Delay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
+
+
+
+void led_strip_driver_task(void *pv){
+    led_strip_driver led_strip(ONBOARD_RGB_LED, 1);
+    for(;;){
+        bool force_color_overwrite = false;
+        if(is_over_current){
+            led_strip.set_color(255,0,255, 0, 0);
+        }else if (is_over_temp){
+            led_strip.set_color(255,0,0, 0, 0);
+        }else{
+            xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
+            led_strip.set_color(led_r,led_g,led_b, 0, 0);
+            xSemaphoreGive(LED_RGB_values_mutex);
+        }
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
