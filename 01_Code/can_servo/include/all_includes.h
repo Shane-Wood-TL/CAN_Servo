@@ -4,10 +4,13 @@
 #include <string>
 #include <string.h>
 #include <stdio.h>
+#include <atomic>
 
 
-enum direction{FORWARD, BACKWARD};
-enum status{OVERTEMP, OVERCURRENT, MOVE, HOLD, SLEEP};
+enum motor_status{OVERTEMP, OVERCURRENT, AWAKE, HOLD, SLEEP, MOVING, ERROR};
+enum motor_modes{POSITION_CONTROL, VELOCITY_CONTROL};
+
+#define bytes_in_float 4
 
 #include "esp_log.h"
 

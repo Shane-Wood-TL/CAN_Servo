@@ -8,11 +8,6 @@ mp6550::mp6550(gpio_num_t in1_p, gpio_num_t in2_p, gpio_num_t sleep_p, gpio_num_
     this->in1_ledc_channel = in1_ledc_channel;
     this->in2_ledc_channel = in2_ledc_channel;
 
-
-    gpio_set_direction(in1_pin, GPIO_MODE_OUTPUT);
-    gpio_set_direction(in2_pin, GPIO_MODE_OUTPUT);
-    gpio_set_direction(sleep_pin, GPIO_MODE_OUTPUT);
-
     wake();
 }
 
@@ -45,10 +40,10 @@ void mp6550::driveMotor(int16_t speed){
 }
 
 void mp6550::sleep(){
-    gpio_set_level(this->sleep_p, 0);
+    gpio_set_level(this->sleep_p, false);
 }
 void mp6550::wake(){
-    gpio_set_level(this->sleep_p, 1);
+    gpio_set_level(this->sleep_p, true);
 }
 float mp6550::read_current(){
     uint16_t raw_reading = 0;//adc1_get_raw(this->current_sense_channel_c);
@@ -57,24 +52,6 @@ float mp6550::read_current(){
     return vout;
 }
 
-void mp6550::update(){
-    xSemaphoreTake(current_position_mutex, portMAX_DELAY);
-    xSemaphoreTake(current_usage_mutex, portMAX_DELAY);
-    xSemaphoreTake(goal_position_mutex, portMAX_DELAY);
-    current_usage = read_current();
-    xSemaphoreGive(current_usage_mutex);
-
-    if(goal_position == current_position){
-        break_motor();
-    }else if(goal_position > current_position){
-        driveMotor(goal_position-current_position);
-    }else if(goal_position < current_position){
-        driveMotor(current_position-goal_position);
-    }
-
-    xSemaphoreGive(current_position_mutex);
-    xSemaphoreGive(goal_position_mutex);
-}
 
 void mp6550::break_motor(){
     driveMotor(0);

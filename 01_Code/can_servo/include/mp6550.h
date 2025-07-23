@@ -3,12 +3,43 @@
 #include "all_includes.h"
 
 
-extern float current_position;
-extern float goal_position;
-extern float current_usage;
-extern SemaphoreHandle_t current_position_mutex;
-extern SemaphoreHandle_t goal_position_mutex;
-extern SemaphoreHandle_t current_usage_mutex;
+// Motor Status variables
+extern SemaphoreHandle_t motor_status_mutex;
+extern uint8_t motor_status;
+extern uint8_t motor_mode; // Default to position control
+
+
+extern SemaphoreHandle_t motor_speed_mutex;
+extern int16_t motor_speed;
+
+
+
+// Motor Measurement variables
+extern SemaphoreHandle_t current_mutex;
+extern float last_current_draw;
+extern float current_limit_value;
+
+extern SemaphoreHandle_t temperature_mutex;
+extern float last_motor_temperature;
+extern float motor_temperature_limit;
+
+
+// Motor Position Variables
+extern SemaphoreHandle_t motor_offset_mutex;
+extern float motor_offset_value;
+
+extern SemaphoreHandle_t target_angle_velocity_mutex;
+extern float target_angle;
+
+extern SemaphoreHandle_t current_angle_velocity_mutex;
+extern float current_angle;
+extern float current_velocity;
+
+
+extern SemaphoreHandle_t time_to_move_mutex;
+extern float time_to_move_value;
+
+
 
 class mp6550{
    private:
@@ -27,7 +58,6 @@ class mp6550{
     void wake();
     float read_current();
     void break_motor();
-    void update();
 };
 
 #endif
