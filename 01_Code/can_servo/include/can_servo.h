@@ -38,9 +38,12 @@ extern SemaphoreHandle_t current_angle_velocity_mutex;
 extern float current_angle;
 extern float current_velocity;
 
-
-
-
+extern SemaphoreHandle_t PID_values_mutex;
+extern float pid_P;
+extern float pid_I;
+extern float pid_D;
+ 
+ 
 class can_servo{
     public:
     enum CommandID {
@@ -55,7 +58,7 @@ class can_servo{
         SET_CURRENT_LIMIT          = 0x010,
         SET_TEMPERATURE_LIMIT      = 0x012,
         SET_LED                    = 0x014,
-        UNUSED_0                   = 0x016,
+        SET_PID                    = 0x016,
         UNUSED_1                   = 0x018,
         UNUSED_2                   = 0x01A,
         UNUSED_3                   = 0x01C,
@@ -86,7 +89,7 @@ class can_servo{
         {SET_CURRENT_LIMIT, 4, false, from_host},
         {SET_TEMPERATURE_LIMIT, 4, false, from_host},
         {SET_LED, 4, false, from_host},
-        {UNUSED_0, 0, false, none},
+        {SET_PID, 3, false, from_host},
         {UNUSED_1, 0, false, none},
         {UNUSED_2, 0,false,none},
         {UNUSED_3, 0, false, none},
