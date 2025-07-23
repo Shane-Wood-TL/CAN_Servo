@@ -3,8 +3,6 @@
 #include "../include/led_strip_driver.h"
 #include "../include/servo_info.h"
 
-extern led_strip_driver* led_strip;
-
 
 can_servo::can_servo(uint8_t id){
     this->id = id;
