@@ -89,7 +89,7 @@ class can_servo{
         {SET_CURRENT_LIMIT, 4, false, from_host},
         {SET_TEMPERATURE_LIMIT, 4, false, from_host},
         {SET_LED, 4, false, from_host},
-        {SET_PID, 3, false, from_host},
+        {SET_PID, 6, false, from_host},
         {UNUSED_1, 0, false, none},
         {UNUSED_2, 0,false,none},
         {UNUSED_3, 0, false, none},
