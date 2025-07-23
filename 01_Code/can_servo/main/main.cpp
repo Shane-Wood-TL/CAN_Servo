@@ -56,7 +56,10 @@ float current_velocity = 0;
 std::atomic<bool> is_over_current = false;
 std::atomic<bool> is_over_temp = false;
 
-
+SemaphoreHandle_t PID_values_mutex;
+float pid_P = 85.0f;
+float pid_I = 7.8f;
+float pid_D = 30.0f;
 
 mp6550 motor(in1_pin, in2_pin, sleep_pin, current_sense_pin, current_sense_channel, LEDC_CHANNEL_0, LEDC_CHANNEL_1);
 
@@ -178,7 +181,7 @@ extern "C" void app_main(void)
         //R = G
         //G = R
         //B = B
-        vTaskDelay(100);
+        vTaspid_Delay(100);
     }
 }
 
@@ -198,7 +201,7 @@ void read_temperature(void *pv){
 
         //printf("Temperature: %f\n", T);
         xSemaphoreGive(temperature_mutex);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaspid_Delay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -212,23 +215,53 @@ void read_position(void *pv){
         //printf("Angle: %f\n", current_angle);
         //read position
         xSemaphoreGive(current_angle_velocity_mutex);
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaspid_Delay(pdMS_TO_TICKS(10));
     }
 }
 
+class running_average{
+    private:
+        const uint8_t window_size = 10;
+        float buffer[window_size] = {0};
+        uint8_t index = 0;
+        uint8_t count = 0;
+        float sum = 0;
+    public:
+        void add_value(float new_value){
+            if (count < window_size){
+                buffer[index] = new_value;
+                sum += new_value;
+                count++;
+            } else {
+                  sum -=  buffer[index];
+                  buffer[index] = value;
+                  sum += value;   
+            }
+            index += 1;
+            if (index >= window_size){
+                index = 0;
+            }
+        }
+
+        float average() {
+            return (count == 0) ? 0.0f : sum / count;
+        }
+   
+}
 
 void read_current(void *pv){
+    running_average current_average;
     for(;;){
         xSemaphoreTake(current_mutex, portMAX_DELAY);
-        last_current_draw = motor.read_current();
-        if(last_current_draw > current_limit_value){
+        current_average.add_value(motor.read_current());
+        if(current_average.average() > current_limit_value){
             is_over_current = true;
             xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
             motor_status = OVERCURRENT;
             xSemaphoreGive(motor_status_mutex);
         }
         xSemaphoreGive(current_mutex);
-        vTaskDelay(pdMS_TO_TICKS(30));
+        vTaspid_Delay(pdMS_TO_TICKS(30));
     }
 }
 float get_shortest_angle(float target, float current) {
@@ -239,28 +272,16 @@ float get_shortest_angle(float target, float current) {
 
 
 void drive_motor(void *pv){
-    float kp = 85.0f;
-    float ki = 7.8f;
-    float kd = 30.0f;
-
     // PID state
     static float integral = 0.0f;
     static float last_error = 0.0f;
-    
-
-    //gpio_set_direction(in1_pin, GPIO_MODE_OUTPUT);
-    //gpio_set_direction(in2_pin, GPIO_MODE_OUTPUT);
-    
 
     uint8_t last_motor_status = AWAKE;
     motor.wake();
     int16_t last_motor_speed = 0;
     float last_target = 0.0f;
-    for(;;){   
-            
+    for(;;){          
         //drive motor
-        //led_strip.set_color(255, 255, 255, 0, 0);
-        
 
 
         // if(is_over_temp){
@@ -333,7 +354,7 @@ void drive_motor(void *pv){
                 }
                 last_target = target_angle;
 
-                float output = kp * error + ki * integral + kd * filtered_derivative;
+                float output = pid_P * error + pid_I * integral + pid_D * filtered_derivative;
 
                 if(output > 4095){
                     last_motor_speed = 4095;
@@ -356,7 +377,7 @@ void drive_motor(void *pv){
             motor.driveMotor(last_motor_speed);
             
         }
-        vTaskDelay(pdMS_TO_TICKS(10));        
+        vTaspid_Delay(pdMS_TO_TICKS(10));        
     }
 }
 
@@ -405,6 +426,6 @@ void can_bus(void *pv){
     can_servo can_bus_driver(node_id);
     for(;;){
         can_bus_driver.receive_message();
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaspid_Delay(pdMS_TO_TICKS(50));
     }
 }
