@@ -5,6 +5,7 @@
 
 extern led_strip_driver* led_strip;
 
+
 can_servo::can_servo(uint8_t id){
     this->id = id;
 }
@@ -15,7 +16,7 @@ void can_servo::receive_message() {
         float a;
         uint8_t bytes[4];     
       } temp_union;
-
+    
     uint32_t alerts_triggered;
     twai_read_alerts(&alerts_triggered, pdMS_TO_TICKS(1000));
 
@@ -140,9 +141,27 @@ void can_servo::receive_message() {
                     xSemaphoreGive(temperature_mutex);
                 }
             }else if (rxMessage.identifier == ((id << 5) | SET_LED)) {
-                printf("Received message with ID: 0x%03lX, Data Length: %d\n",
-                rxMessage.identifier, rxMessage.data_length_code);
-                led_strip->set_color(rxMessage.data[0], rxMessage.data[1], rxMessage.data[2], 0, 0); // Set LED strip to blue
+                xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
+                led_r = rxMessage.data[0];
+                led_g = rxMessage.data[1];
+                led_b = rxMessage.data[2];
+                xSemaphoreGive(LED_RGB_values_mutex);
+            }else if (rxMessage.identifier == ((id << 5) | SET_PID)) {
+                temp_union.bytes[0] = rxMessage.data[1];
+                temp_union.bytes[1] = rxMessage.data[2];
+                temp_union.bytes[2] = rxMessage.data[3];
+                temp_union.bytes[3] = rxMessage.data[4];
+                
+                xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
+                if(rxMessage.data[0] == PID_MESSAGE_P){
+                    pid_P = temp_union.a;
+                }else if (rxMessage.data[0] == PID_MESSAGE_I){
+                    pid_I = temp_union.a;
+                }else if(rxMessage.data[0] == PID_MESSAGE_D){
+                    pid_D = temp_union.a;
+                }
+                xSemaphoreGive(PID_values_mutex);
+                
             }else {
                 // Unhandled message ID
             }
