@@ -9,7 +9,7 @@
 
 enum motor_status{OVERTEMP, OVERCURRENT, AWAKE, HOLD, SLEEP, MOVING, ERROR};
 enum motor_modes{POSITION_CONTROL, VELOCITY_CONTROL};
-
+enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
 #define bytes_in_float 4
 
 #include "esp_log.h"
