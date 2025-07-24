@@ -14,7 +14,7 @@ enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
 #define COMMAND_ID_MASK 0x1F
 #define ID_OFFSET 5
 #define BYTES_IN_FLOAT 4
-
+#define MAX_ADC_FLOAT 4095.0f
 
 #define BYTE_0 0
 #define BYTE_1 1
