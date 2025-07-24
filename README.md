@@ -15,19 +15,18 @@ This is still a work in progess
 - [x] Position Control
 - [x] PID
 - [X] Variable motor speed
-
-### Planned Features:
-- [ ] Limiting Current / Temperature
-- [ ] Using RGB for status
-- [ ] Velocity Control
-- [ ] PID parameters over CAN
-- [ ] Motor Sleep
-
+- [X] Limiting Current / Temperature
+- [X] Using RGB for status
+- [X] Velocity Control
+- [X] PID parameters over CAN
+- [X] Motor Sleep
+- [X] "All respond" node id
+<br>
 ### Additional Work:
 - [ ] Upload CAD
 - [ ] Upload PCB
 - [ ] Upload Schematic
-
+- [ ] PDF Build Guide
 <br>
 
 # PCB BOM
