@@ -47,8 +47,8 @@ void mp6550::wake(){
 }
 float mp6550::read_current(){
     uint16_t raw_reading = 0;//adc1_get_raw(this->current_sense_channel_c);
-    float vout = raw_reading * 3.3 / 4095;
-    vout = vout / 0.2; //200mV/A sensitivity
+    float vout = raw_reading * VCC / MAX_ADC_INT;
+    vout = vout / MP6550_CURRENT_SENSITIVITY; //200mV/A sensitivity
     return vout;
 }
 
