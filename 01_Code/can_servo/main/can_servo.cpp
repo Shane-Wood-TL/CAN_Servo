@@ -292,6 +292,6 @@ void can_servo::send_message(const command to_send, const uint8_t* message_conte
     while(twai_receive(&rx_message,0)== ESP_OK){
     
     }
-    esp_err_t result = twai_transmit(&tx_message, pdMS_TO_TICKS(200));
+    esp_err_t result = twai_transmit(&tx_message, pdMS_TO_TICKS(MAX_TWAI_TIMEOUT));
     
 }
