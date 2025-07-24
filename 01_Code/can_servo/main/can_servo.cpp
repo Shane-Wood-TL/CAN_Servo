@@ -26,7 +26,7 @@ void can_servo::receive_message() {
         // Receive all available messages
         while (twai_receive(&rxMessage, 0) == ESP_OK) {
 
-            if (rxMessage.identifier == ((id << 5) | GET_INFO)) {
+            if (rxMessage.identifier == ((id << 5) | GET_INFO) or rxMessage.identifier == ((receive_all_id << 5) | GET_INFO)) {
                 printf("Received message with ID: 0x%03lX, Data Length: %d\n",
                    rxMessage.identifier, rxMessage.data_length_code);
                 display_message(rxMessage.data, 0, rxMessage.identifier);
@@ -34,7 +34,7 @@ void can_servo::receive_message() {
                 send_message(commandList[GET_INFO], info);
 
 
-            } else if (rxMessage.identifier == ((id << 5) | SET_MODE_STATE)) {
+            } else if (rxMessage.identifier == ((id << 5) | SET_MODE_STATE) or rxMessage.identifier == ((receive_all_id << 5) | SET_MODE_STATE)) {
                 if (rxMessage.data_length_code == 2) {
                     xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
                     motor_mode = rxMessage.data[0];
@@ -43,7 +43,7 @@ void can_servo::receive_message() {
                 }
 
 
-            } else if (rxMessage.identifier == ((id << 5) | GET_MODE_STATE)) {
+            } else if (rxMessage.identifier == ((id << 5) | GET_MODE_STATE) or rxMessage.identifier == ((receive_all_id << 5) | GET_MODE_STATE)) {
                 uint8_t mode_state[2] = {0, 0};
                 xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
                 mode_state[0] = motor_mode;
@@ -52,7 +52,7 @@ void can_servo::receive_message() {
                 send_message(commandList[GET_MODE_STATE], mode_state);
 
 
-            }else if (rxMessage.identifier == ((id << 5) | GET_POSITION_VELOCITY)) {
+            }else if (rxMessage.identifier == ((id << 5) | GET_POSITION_VELOCITY) or rxMessage.identifier == ((receive_all_id << 5) | GET_POSITION_VELOCITY)) {
                 uint8_t temp_data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
                 xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
                 temp_union.a = current_angle;
@@ -71,7 +71,7 @@ void can_servo::receive_message() {
                 send_message(commandList[GET_POSITION_VELOCITY], temp_data);
 
 
-            }else if (rxMessage.identifier == ((id << 5) | GET_CURRENT_DRAW)) {
+            }else if (rxMessage.identifier == ((id << 5) | GET_CURRENT_DRAW) or rxMessage.identifier == ((receive_all_id << 5) | GET_CURRENT_DRAW)) {
                 uint8_t temp_data[4] = {0, 0, 0, 0};
                 xSemaphoreTake(current_mutex, portMAX_DELAY);
                 temp_union.a = last_current_draw;
@@ -83,7 +83,7 @@ void can_servo::receive_message() {
                 send_message(commandList[GET_CURRENT_DRAW], temp_data);
 
 
-            }else if (rxMessage.identifier == ((id << 5) | GET_TEMPERATURE)) {
+            }else if (rxMessage.identifier == ((id << 5) | GET_TEMPERATURE) or rxMessage.identifier == ((receive_all_id << 5) | GET_TEMPERATURE)) {
                 uint8_t temp_data[4] = {0, 0, 0, 0};
                 xSemaphoreTake(temperature_mutex, portMAX_DELAY);
                 temp_union.a = last_motor_temperature;
@@ -95,7 +95,7 @@ void can_servo::receive_message() {
                 send_message(commandList[GET_TEMPERATURE], temp_data);
 
 
-            }else if (rxMessage.identifier == ((id << 5) | SET_GOAL_POSITION_VELOCITY)) {
+            }else if (rxMessage.identifier == ((id << 5) | SET_GOAL_POSITION_VELOCITY) or rxMessage.identifier == ((receive_all_id << 5) | SET_GOAL_POSITION_VELOCITY)) {
                 temp_union.bytes[0] = rxMessage.data[0];
                 temp_union.bytes[1] = rxMessage.data[1];
                 temp_union.bytes[2] = rxMessage.data[2];
@@ -108,7 +108,7 @@ void can_servo::receive_message() {
                 }
                 xSemaphoreGive(target_angle_velocity_mutex);
 
-            }else if (rxMessage.identifier == ((id << 5) | SET_OFFSET)) {
+            }else if (rxMessage.identifier == ((id << 5) | SET_OFFSET) or rxMessage.identifier == ((receive_all_id << 5) | SET_OFFSET)) {
                 if (rxMessage.data_length_code == 4) {
                     xSemaphoreTake(motor_offset_mutex, portMAX_DELAY);
                     temp_union.bytes[0] = rxMessage.data[0];
@@ -118,7 +118,7 @@ void can_servo::receive_message() {
                     motor_offset_value = temp_union.a;
                     xSemaphoreGive(motor_offset_mutex);
                 }
-            }else if (rxMessage.identifier == ((id << 5) | SET_CURRENT_LIMIT)) { 
+            }else if (rxMessage.identifier == ((id << 5) | SET_CURRENT_LIMIT) or rxMessage.identifier == ((receive_all_id << 5) | SET_CURRENT_LIMIT)) { 
                 if (rxMessage.data_length_code == 4) {
                     xSemaphoreTake(current_mutex, portMAX_DELAY);
                     temp_union.bytes[0] = rxMessage.data[0];
@@ -128,7 +128,7 @@ void can_servo::receive_message() {
                     current_limit_value = temp_union.a;
                     xSemaphoreGive(current_mutex);
                 }   
-            }else if (rxMessage.identifier == ((id << 5) | SET_TEMPERATURE_LIMIT)) {
+            }else if (rxMessage.identifier == ((id << 5) | SET_TEMPERATURE_LIMIT) or rxMessage.identifier == ((receive_all_id << 5) | SET_TEMPERATURE_LIMIT)) {
                 if (rxMessage.data_length_code == 4) {
                     xSemaphoreTake(temperature_mutex, portMAX_DELAY);
                     temp_union.bytes[0] = rxMessage.data[0];
@@ -138,13 +138,13 @@ void can_servo::receive_message() {
                     motor_temperature_limit = temp_union.a;
                     xSemaphoreGive(temperature_mutex);
                 }
-            }else if (rxMessage.identifier == ((id << 5) | SET_LED)) {
+            }else if (rxMessage.identifier == ((id << 5) | SET_LED) or rxMessage.identifier == ((receive_all_id << 5) | SET_LED)) {
                 xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
                 led_r = rxMessage.data[0];
                 led_g = rxMessage.data[1];
                 led_b = rxMessage.data[2];
                 xSemaphoreGive(LED_RGB_values_mutex);
-            }else if (rxMessage.identifier == ((id << 5) | SET_PID)) {
+            }else if (rxMessage.identifier == ((id << 5) | SET_PID) or rxMessage.identifier == ((receive_all_id << 5) | SET_PID)) {
                 temp_union.bytes[0] = rxMessage.data[1];
                 temp_union.bytes[1] = rxMessage.data[2];
                 temp_union.bytes[2] = rxMessage.data[3];

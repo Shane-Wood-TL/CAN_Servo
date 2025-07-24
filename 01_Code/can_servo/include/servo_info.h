@@ -1,7 +1,8 @@
 #ifndef SERVO_INFO_H
 #define SERVO_INFO_H
 
-#define node_id 0
+#define node_id 1
+#define receive_all_id 0
 #define version_major 0
 #define version_minor 1
 

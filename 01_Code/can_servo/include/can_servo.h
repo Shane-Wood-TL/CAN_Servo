@@ -42,7 +42,11 @@ extern SemaphoreHandle_t PID_values_mutex;
 extern float pid_P;
 extern float pid_I;
 extern float pid_D;
- 
+
+extern SemaphoreHandle_t LED_RGB_values_mutex;
+extern float led_r;
+extern float led_g;
+extern float led_b;
  
 class can_servo{
     public:
