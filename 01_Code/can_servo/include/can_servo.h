@@ -2,6 +2,9 @@
 #define __can_servo__
 
 #include "all_includes.h"
+#define COMMAND_ID_MASK 0x1F
+#define ID_OFFSET 5
+#define BYTES_IN_FLOAT 4
 
 #define MAX_TWAI_TIMEOUT 1000
 #define MAX_COMMAND_COUNT 16
@@ -86,53 +89,49 @@ extern float led_b;
 class can_servo{
     public:
     enum CommandID {
-        GET_INFO                   = 0x000,
-        SET_MODE_STATE             = 0x002,
-        GET_MODE_STATE             = 0x004,
-        GET_POSITION_VELOCITY      = 0x006,
-        GET_CURRENT_DRAW           = 0x008,
-        GET_TEMPERATURE            = 0x00A,
-        SET_GOAL_POSITION_VELOCITY = 0x00C,
-        SET_OFFSET                 = 0x00E,
-        SET_CURRENT_LIMIT          = 0x010,
-        SET_TEMPERATURE_LIMIT      = 0x012,
-        SET_LED                    = 0x014,
-        SET_PID                    = 0x016,
-        UNUSED_1                   = 0x018,
-        UNUSED_2                   = 0x01A,
-        UNUSED_3                   = 0x01C,
-        UNUSED_4                   = 0x01E,
+        GET_INFO                   = GET_INFO_COMMAND_ID,
+        SET_MODE_STATE             = SET_MODE_SET_COMMAND_ID,
+        GET_MODE_STATE             = GET_MODE_SET_COMMAND_ID,
+        GET_POSITION_VELOCITY      = GET_POSITION_VELOCITY_COMMAND_ID,
+        GET_CURRENT_DRAW           = GET_CURRENT_DRAW_COMMAND_ID,
+        GET_TEMPERATURE            = GET_TEMPERATURE_COMMAND_ID,
+        SET_GOAL_POSITION_VELOCITY = SET_GOAL_POSITION_VELOCITY_COMMAND_ID,
+        SET_OFFSET                 = SET_OFFSET_COMMAND_ID,
+        SET_CURRENT_LIMIT          = SET_CURRENT_LIMIT_COMMAND_ID,
+        SET_TEMPERATURE_LIMIT      = SET_TEMPERATURE_LIMIT_COMMAND_ID,
+        SET_LED                    = SET_LED_COMMAND_ID,
+        SET_PID                    = SET_PID_COMMAND_ID,
+        UNUSED_1                   = UNUSED_1_COMMAND_ID,
+        UNUSED_2                   = UNUSED_2_COMMAND_ID,
+        UNUSED_3                   = UNUSED_3_COMMAND_ID,
+        UNUSED_4                   = UNUSED_4_COMMAND_ID,
     };
-    enum data_direction {
-        to_host = 0x00,
-        from_host = 0x01,
-        none = 0x02
+    enum data_direction {to_host = 0x00, from_host, none};
 
-    };
     struct command{
         uint8_t id;
         uint8_t data_length;
         bool data_returned;
         data_direction direction;
     };
-    command commandList[16] = {
+    command commandList[MAX_COMMAND_COUNT] = {
         //name, data length, data returned, data direction
-        {GET_INFO, 3, true, to_host},
-        {SET_MODE_STATE, 2, false, from_host},
-        {GET_MODE_STATE, 2, true, to_host},
-        {GET_POSITION_VELOCITY, 8, true, to_host},
-        {GET_CURRENT_DRAW, 4, true, to_host},
-        {GET_TEMPERATURE, 4, true, to_host},
-        {SET_GOAL_POSITION_VELOCITY, 4, false, from_host},
-        {SET_OFFSET, 4, true, from_host},
-        {SET_CURRENT_LIMIT, 4, false, from_host},
-        {SET_TEMPERATURE_LIMIT, 4, false, from_host},
-        {SET_LED, 4, false, from_host},
-        {SET_PID, 6, false, from_host},
-        {UNUSED_1, 0, false, none},
-        {UNUSED_2, 0,false,none},
-        {UNUSED_3, 0, false, none},
-        {UNUSED_4, 0, false, none},
+        {GET_INFO, GET_INFO_COMMAND_LENGTH, true, to_host},
+        {SET_MODE_STATE, SET_MODE_SET_COMMAND_LENGTH, false, from_host},
+        {GET_MODE_STATE, GET_MODE_SET_COMMAND_LENGTH, true, to_host},
+        {GET_POSITION_VELOCITY, GET_POSITION_VELOCITY_COMMAND_LENGTH, true, to_host},
+        {GET_CURRENT_DRAW, GET_CURRENT_DRAW_COMMAND_LENGTH, true, to_host},
+        {GET_TEMPERATURE, GET_TEMPERATURE_COMMAND_LENGTH, true, to_host},
+        {SET_GOAL_POSITION_VELOCITY, SET_GOAL_POSITION_VELOCITY_COMMAND_LENGTH, false, from_host},
+        {SET_OFFSET, SET_OFFSET_COMMAND_LENGTH, true, from_host},
+        {SET_CURRENT_LIMIT, SET_CURRENT_LIMIT_COMMAND_LENGTH, false, from_host},
+        {SET_TEMPERATURE_LIMIT, SET_TEMPERATURE_LIMIT_COMMAND_LENGTH, false, from_host},
+        {SET_LED, SET_LED_COMMAND_LENGTH, false, from_host},
+        {SET_PID, SET_PID_COMMAND_LENGTH, false, from_host},
+        {UNUSED_1, UNUSED_1_COMMAND_LENGTH, false, none},
+        {UNUSED_2, UNUSED_2_COMMAND_LENGTH,false,none},
+        {UNUSED_3, UNUSED_3_COMMAND_LENGTH, false, none},
+        {UNUSED_4, UNUSED_4_COMMAND_LENGTH , false, none},
     };
     uint8_t id;
     void display_message(uint8_t *data, uint8_t length, uint16_t identifier);
