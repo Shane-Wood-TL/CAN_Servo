@@ -2,9 +2,6 @@
 #define __can_servo__
 
 #include "all_includes.h"
-#define COMMAND_ID_MASK 0x1F
-#define ID_OFFSET 5
-#define BYTES_IN_FLOAT 4
 
 #define MAX_TWAI_TIMEOUT 1000
 #define MAX_COMMAND_COUNT 16
