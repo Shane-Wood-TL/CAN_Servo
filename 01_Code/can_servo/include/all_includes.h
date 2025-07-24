@@ -10,9 +10,10 @@
 enum motor_status{OVERTEMP, OVERCURRENT, AWAKE, SLEEP, ERROR};
 enum motor_modes{POSITION_CONTROL, VELOCITY_CONTROL};
 enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
-#define BYTES_IN_FLOAT 4
 #define VCC 3.3f
-
+#define COMMAND_ID_MASK 0x1F
+#define ID_OFFSET 5
+#define BYTES_IN_FLOAT 4
 
 
 #define BYTE_0 0
