@@ -1,4 +1,5 @@
-#include "../include/mp6550.h"
+#include "../../include/drivers/mp6550.h"
+
 mp6550::mp6550(gpio_num_t in1_p, gpio_num_t in2_p, gpio_num_t sleep_p, gpio_num_t current_sense_p, adc_channel_t current_sense_channel_c, ledc_channel_t in1_ledc_channel, ledc_channel_t in2_ledc_channel){
     this->in1_p = in1_p;
     this->in2_p = in2_p;
@@ -47,8 +48,8 @@ void mp6550::wake(){
 }
 float mp6550::read_current(){
     uint16_t raw_reading = 0;//adc1_get_raw(this->current_sense_channel_c);
-    float vout = raw_reading * 3.3 / 4095;
-    vout = vout / 0.2; //200mV/A sensitivity
+    float vout = raw_reading * VCC / MAX_ADC_INT;
+    vout = vout / MP6550_CURRENT_SENSITIVITY; //200mV/A sensitivity
     return vout;
 }
 

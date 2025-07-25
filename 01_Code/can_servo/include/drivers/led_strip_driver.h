@@ -7,7 +7,7 @@
 
 #ifndef __led_strip_driver__
 #define __led_strip_driver__
-#include "all_includes.h"
+#include "../all_includes.h"
 #include "led_strip.h"
 
 #define rmt_counter_clock_frequency (10000000)  ///< 10MHz for the rmt counter clock

@@ -4,13 +4,53 @@
 #include <string>
 #include <string.h>
 #include <stdio.h>
-#include <atomic>
-
+#include <math.h>
 
 enum motor_status{OVERTEMP, OVERCURRENT, AWAKE, SLEEP, ERROR};
 enum motor_modes{POSITION_CONTROL, VELOCITY_CONTROL};
 enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
-#define bytes_in_float 4
+
+
+
+#define VCC 3.3f
+#define COMMAND_ID_MASK 0x1F
+#define ID_OFFSET 5
+#define BYTES_IN_FLOAT 4
+#define MAX_ADC_FLOAT 4095.0f
+#define MAX_ADC_INT 4095
+
+#define BYTE_0 0
+#define BYTE_1 1
+#define BYTE_2 2
+#define BYTE_3 3
+#define BYTE_4 4
+#define BYTE_5 5
+#define BYTE_6 6
+#define BYTE_7 7
+#define BYTE_8 8
+
+
+#define READ_TEMPERATURE_STACK_SIZE 2048
+#define READ_TEMPERATURE_PRIORITY 5
+
+#define READ_CURRENT_STACK_SIZE 2048
+#define READ_CURRENT_PRIORITY 5
+
+#define READ_POSITION_STACK_SIZE 2048
+#define READ_POSITION_PRIORITY 5
+
+#define DRIVE_MOTOR_STACK_SIZE 2048
+#define DRIVE_MOTOR_PRIORITY 5
+
+#define CAN_BUS_STACK_SIZE 10000
+#define CAN_BUS_PRIORITY 5
+
+#define LED_STRIP_DRIVER_TASK_STACK_SIZE 2048
+#define LED_STRIP_DRIVER_TASK_PRIORITY 10
+
+#define MAIN_TASK_DELAY 1000
+
+
 
 #include "esp_log.h"
 
@@ -29,8 +69,8 @@ enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
 #include "pinout.h"
 
 #include "servo_info.h"
-#include "mp6550.h"
-#include "can_servo.h"
+#include "drivers/mp6550.h"
+#include "drivers/can_servo.h"
 
 
 

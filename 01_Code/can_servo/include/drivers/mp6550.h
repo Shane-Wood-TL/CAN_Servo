@@ -1,7 +1,8 @@
 #ifndef __mp6550__
 #define __mp6550__
-#include "all_includes.h"
+#include "../all_includes.h"
 
+#define MP6550_CURRENT_SENSITIVITY 0.2f
 
 // Motor Status variables
 extern SemaphoreHandle_t motor_status_mutex;
@@ -34,10 +35,6 @@ extern float target_angle;
 extern SemaphoreHandle_t current_angle_velocity_mutex;
 extern float current_angle;
 extern float current_velocity;
-
-
-extern SemaphoreHandle_t time_to_move_mutex;
-extern float time_to_move_value;
 
 
 

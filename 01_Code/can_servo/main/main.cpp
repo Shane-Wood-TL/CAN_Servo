@@ -1,21 +1,11 @@
-
 #include "../include/all_includes.h"
-#include "../include/led_strip_driver.h"
-#include <math.h>
 
-void read_temperature(void *pv);
-void read_position(void *pv);
-void drive_motor(void *pv);
-void can_bus(void *pv);
-void read_current(void *pv);
-void led_strip_driver_task(void *pv);
-
-float get_shortest_angle(float target, float current);
-
-#define WINDOW_SIZE 10
-#define MAX_ADC_FLOAT 4095.0f
-#define K_TO_C 273.15f
-
+#include "../include/tasks/can_bus_task.h"
+#include "../include/tasks/read_temperature_task.h"
+#include "../include/tasks/read_current_task.h"
+#include "../include/tasks/read_position_task.h"
+#include "../include/tasks/drive_motor_task.h"
+#include "../include/tasks/led_strip_driver_task.h"
 
 SemaphoreHandle_t motor_speed_mutex;
 int16_t motor_speed = 0;
@@ -87,8 +77,8 @@ adc_oneshot_chan_cfg_t adc_config = {
 
 
 
-#define max_raw_position 3297
-#define min_raw_position 0
+
+#define MOTOR_FREQUENCY 5000
 
 extern "C" void app_main(void)
 {
@@ -139,7 +129,7 @@ extern "C" void app_main(void)
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .duty_resolution = LEDC_TIMER_12_BIT,
         .timer_num  = LEDC_TIMER_0,
-        .freq_hz    = 5000,
+        .freq_hz    = MOTOR_FREQUENCY,
         .clk_cfg = LEDC_AUTO_CLK,
         .deconfigure = false,   
     };
@@ -161,384 +151,16 @@ extern "C" void app_main(void)
 
 
 
-    xTaskCreate(read_temperature, "read_temperature", 2048, NULL, 5, NULL);
-    xTaskCreate(read_current, "read_current", 2048, NULL, 5, NULL);
-    xTaskCreate(read_position, "read_position", 2048, NULL, 5, NULL);
-    xTaskCreate(drive_motor, "drive_motor", 2048, NULL, 5, NULL);
-    xTaskCreate(can_bus, "can_bus", 10000, NULL, 5, NULL);
-    xTaskCreate(led_strip_driver_task, "led_strip_driver_task", 2048, NULL, 10, NULL);
+    xTaskCreate(read_temperature, "read_temperature", READ_TEMPERATURE_STACK_SIZE, NULL, READ_TEMPERATURE_PRIORITY, NULL);
+    xTaskCreate(read_current, "read_current", READ_CURRENT_STACK_SIZE, NULL, READ_CURRENT_PRIORITY, NULL);
+    xTaskCreate(read_position, "read_position", READ_POSITION_STACK_SIZE, NULL, READ_POSITION_PRIORITY, NULL);
+    xTaskCreate(drive_motor, "drive_motor", DRIVE_MOTOR_STACK_SIZE, NULL, DRIVE_MOTOR_PRIORITY, NULL);
+    xTaskCreate(can_bus, "can_bus", CAN_BUS_STACK_SIZE, NULL, CAN_BUS_PRIORITY, NULL);
+    xTaskCreate(led_strip_driver_task, "led_strip_driver_task", LED_STRIP_DRIVER_TASK_STACK_SIZE, NULL, LED_STRIP_DRIVER_TASK_PRIORITY, NULL);
         
 
 
     for(;;){
-        vTaskDelay(100);
+        vTaskDelay(MAIN_TASK_DELAY);
     }
 }
-
-
-
-
-
-
-
-void read_temperature(void *pv){
-    int raw_temp_reading;
-    for(;;){
-       
-        adc_oneshot_read(adc_handle, temp_sense_channel, &raw_temp_reading);
-        float temp_resistance = 10000.0f * ((MAX_ADC_FLOAT / (float)raw_temp_reading) - 1.0f);
-
-        float logR2 = log(temp_resistance);
-        float T =  1.0f / ( 0.001129148 + ( 0.000234125 * logR2 ) + ( 0.0000000876741 * logR2 * logR2 * logR2) ) ;
-        T = T - K_TO_C;
-
-         xSemaphoreTake(temperature_mutex, portMAX_DELAY);
-        last_motor_temperature = T;
-
-        if(last_motor_temperature > max_motor_temperature){
-            max_motor_temperature = last_motor_temperature;
-        }
-        //printf("Temperature: %f\n", T);
-
-        if(last_motor_temperature > motor_temperature_limit){
-            xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
-            motor_status = OVERTEMP;
-            xSemaphoreGive(motor_status_mutex);
-        }
-        
-        xSemaphoreGive(temperature_mutex);
-
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-void read_position(void *pv){
-    int raw_position_reading;
-    for(;;){
-        xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
-        adc_oneshot_read(adc_handle, position_channel, &raw_position_reading);
-        current_angle = raw_position_reading/(max_raw_position/360.0f);
-        //printf("Angle: %f\n", current_angle);
-        //read position
-        xSemaphoreGive(current_angle_velocity_mutex);
-        vTaskDelay(pdMS_TO_TICKS(10));
-    }
-}
-
-
-
-
-
-
-
-
-class running_average{
-    private:
-        float buffer[WINDOW_SIZE] = {0};
-        uint8_t index = 0;
-        uint8_t count = 0;
-        float sum = 0;
-    public:
-        void add_value(float new_value){
-            if (count < WINDOW_SIZE){
-                buffer[index] = new_value;
-                sum += new_value;
-                count++;
-            } else {
-                  sum -=  buffer[index];
-                  buffer[index] = new_value;
-                  sum += new_value;   
-            }
-            index += 1;
-            if (index >= WINDOW_SIZE){
-                index = 0;
-            }
-        }
-
-        float average() {
-            return (count == 0) ? 0.0f : sum / count;
-        }
-};
-
-
-
-
-
-
-
-
-
-
-void read_current(void *pv){
-    running_average current_average;
-    for(;;){
-        xSemaphoreTake(current_mutex, portMAX_DELAY);
-        current_average.add_value(motor.read_current());
-        if(current_average.average() > current_limit_value){
-            xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
-            motor_status = OVERCURRENT;
-            xSemaphoreGive(motor_status_mutex);
-        }
-        xSemaphoreGive(current_mutex);
-        vTaskDelay(pdMS_TO_TICKS(30));
-    }
-}
-float get_shortest_angle(float target, float current) {
-    return target - current;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void drive_motor(void *pv){
-    // PID state
-    static float integral = 0.0f;
-    static float last_error = 0.0f;
-
-    int16_t last_motor_speed = 0;
-    
-    float last_target = 0.0f;
-
-    bool is_sleeping = false;
-    for(;;){          
-        //drive motor
-        xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
-        uint8_t current_motor_status = motor_status;
-        uint8_t current_motor_mode = motor_mode;
-        xSemaphoreGive(motor_status_mutex);
-
-        
-
-        if(current_motor_status == OVERTEMP){
-            motor.sleep();
-            is_sleeping = true;
-        }else if(current_motor_status == OVERCURRENT){
-            motor.sleep();
-            is_sleeping = true;
-        }else if(current_motor_status == AWAKE){
-            if(is_sleeping){
-                motor.wake();
-                is_sleeping = false;
-            }
-        }else if(current_motor_status == SLEEP){
-            if(!is_sleeping){
-                motor.sleep();
-                is_sleeping = true;
-            }
-        }else if(current_motor_status == ERROR){
-            motor.sleep();
-            is_sleeping = true;
-        }
-
-        
-                
-        
-        if (current_motor_status == AWAKE){
-            if(current_motor_mode == VELOCITY_CONTROL){
-                xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
-                last_motor_speed = (int16_t)map(target_velocity, -100.0f, 100.0f, -4095.0f, 4095.0f);
-                xSemaphoreGive(target_angle_velocity_mutex);
-            }else if(current_motor_mode == POSITION_CONTROL){
-
-                xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
-                xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
-                xSemaphoreTake(motor_offset_mutex, portMAX_DELAY);
-                
-
-
-                
-                //printf("Current Angle: %f\n", current_angle);
-                printf("Target Angle: %f\n", target_angle);
-                //printf("Offset Value: %d\n", motor_offset_value);
-                //float error = target_angle - current_angle;
-                float error = get_shortest_angle(target_angle, current_angle);
-                float dt = 0.01f;  // time step in seconds
-                // Integral with anti-windup
-                integral += error * dt;
-                float integral_limit = 100.0f;  // limit integral
-                if (integral > integral_limit) integral = integral_limit;
-                else if (integral < -integral_limit) integral = -integral_limit;
-
-                // Derivative
-                float derivative = (error - last_error) / dt;
-                float alpha = 0.5f; // Low-pass filter coefficient
-                static float last_filtered = 0.0f; // Last filtered value for derivative
-                float filtered_derivative = alpha * derivative + (1 - alpha) * last_filtered;
-
-                last_error = error;
-
-                
-                if (fabsf(last_target - target_angle) > 10.0f) {
-                    integral = 0;
-                }
-                last_target = target_angle;
-
-                xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
-                float output = pid_P * error + pid_I * integral + pid_D * filtered_derivative;
-                xSemaphoreGive(PID_values_mutex);
-
-                if(output > 4095){
-                    last_motor_speed = 4095;
-                }else if(output < -4095){
-                    last_motor_speed = -4095;
-                }else{
-                    last_motor_speed = (int16_t)output;
-                }
-                // Stop near target
-                if (fabsf(error) < 1.0f) {
-                    last_motor_speed = 0;
-                    motor.break_motor();
-                }
-
-                xSemaphoreGive(motor_offset_mutex);
-                xSemaphoreGive(target_angle_velocity_mutex);
-                xSemaphoreGive(current_angle_velocity_mutex);
-                
-                //printf("angle: %f, target: %f, error: %f, output: %f\n", current_angle, target_angle, error, output);  
-            }
-             motor.driveMotor(last_motor_speed);
-        }
-
-        vTaskDelay(pdMS_TO_TICKS(10));        
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void can_bus(void *pv){
-
-
-    static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();
-    static const twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
-
-
-    // static const twai_filter_config_t f_config = {
-    //     .acceptance_code = (node_id << 5),     // Match the node ID bits
-    //     .acceptance_mask = (uint32_t)(~0x1F),            // Mask: only match top 6+ bits, ignore lower 5
-    //     .single_filter = true
-    // };
-
-
-    static const twai_general_config_t g_config = {
-        .controller_id = 0,
-        .mode = TWAI_MODE_NORMAL,
-        .tx_io = can_TX_pin,
-        .rx_io = can_RX_pin,
-        .clkout_io = TWAI_IO_UNUSED,
-        .bus_off_io = TWAI_IO_UNUSED,
-        .tx_queue_len = 1,
-        .rx_queue_len = 32,
-        .alerts_enabled = TWAI_ALERT_NONE,
-        .clkout_divider = 0,
-        .intr_flags = 0
-    };
-
-    if (twai_driver_install(&g_config, &t_config, &f_config) != ESP_OK)
-    {
-        assert(false);
-    }
-
-    while (twai_start() != ESP_OK)
-    {
-        assert(false);
-    }
-
-    uint32_t alerts_to_enable = TWAI_ALERT_RX_DATA | TWAI_ALERT_ERR_PASS | TWAI_ALERT_BUS_ERROR | TWAI_ALERT_RX_QUEUE_FULL | TWAI_ALERT_TX_IDLE | TWAI_ALERT_TX_SUCCESS | TWAI_ALERT_TX_FAILED | TWAI_ALERT_ERR_PASS | TWAI_ALERT_BUS_ERROR;
-    twai_reconfigure_alerts(alerts_to_enable, NULL);
-
-    can_servo can_bus_driver(node_id);
-    for(;;){
-        can_bus_driver.receive_message();
-        vTaskDelay(pdMS_TO_TICKS(50));
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void led_strip_driver_task(void *pv){
-    led_strip_driver led_strip(ONBOARD_RGB_LED, 1);
-    xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
-    uint8_t old_motor_status = motor_status;
-    xSemaphoreGive(motor_status_mutex);
-    for(;;){
-
-        xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
-
-        if(motor_status == OVERCURRENT and old_motor_status != OVERCURRENT){
-            xSemaphoreGive(motor_status_mutex);
-            led_strip.set_color(255,0,255, 0, 0);
-            old_motor_status = OVERCURRENT;
-        }else if (motor_status == OVERTEMP and old_motor_status != OVERTEMP){
-            xSemaphoreGive(motor_status_mutex);
-            led_strip.set_color(255,0,0, 0, 0);
-            old_motor_status = OVERTEMP;
-        }else if (motor_status == SLEEP and old_motor_status != SLEEP){
-            xSemaphoreGive(motor_status_mutex);
-            led_strip.set_color(255,0,0, 0, 0);
-            old_motor_status = SLEEP;
-        }else{
-            xSemaphoreGive(motor_status_mutex);
-
-            xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
-            led_strip.set_color(led_r,led_g,led_b, 0, 0);
-            xSemaphoreGive(LED_RGB_values_mutex);
-        }
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}
-
