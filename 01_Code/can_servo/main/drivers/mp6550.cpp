@@ -1,4 +1,5 @@
-#include "../include/mp6550.h"
+#include "../../include/drivers/mp6550.h"
+
 mp6550::mp6550(gpio_num_t in1_p, gpio_num_t in2_p, gpio_num_t sleep_p, gpio_num_t current_sense_p, adc_channel_t current_sense_channel_c, ledc_channel_t in1_ledc_channel, ledc_channel_t in2_ledc_channel){
     this->in1_p = in1_p;
     this->in2_p = in2_p;

@@ -1,7 +1,6 @@
-#include "../include/all_includes.h"
-#include "../include/can_servo.h"
-#include "../include/led_strip_driver.h"
-#include "../include/servo_info.h"
+#include "../../include/all_includes.h"
+#include "../../include/drivers/can_servo.h"
+
 
 
 can_servo::can_servo(uint8_t id){
@@ -21,8 +20,6 @@ void can_servo::receive_message() {
     if (alerts_triggered & TWAI_ALERT_RX_DATA) {
         twai_message_t rxMessage;
 
-        uint8_t command_id = rxMessage.identifier & COMMAND_ID_MASK;
-        //printf("Command ID: 0x%02X\n", command_id);
         // Receive all available messages
         while (twai_receive(&rxMessage, 0) == ESP_OK) {
 
@@ -72,7 +69,7 @@ void can_servo::receive_message() {
 
 
             }else if (rxMessage.identifier == ((id << ID_OFFSET) | GET_CURRENT_DRAW) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | GET_CURRENT_DRAW)) {
-                uint8_t temp_data[commandList[].data_length] = {0, 0, 0, 0};
+                uint8_t temp_data[commandList[GET_CURRENT_DRAW].data_length] = {0, 0, 0, 0};
                 xSemaphoreTake(current_mutex, portMAX_DELAY);
                 temp_union.a = last_current_draw;
                 temp_data[BYTE_0] = temp_union.bytes[BYTE_0];
@@ -84,7 +81,7 @@ void can_servo::receive_message() {
 
 
             }else if (rxMessage.identifier == ((id << ID_OFFSET) | GET_TEMPERATURE) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | GET_TEMPERATURE)) {
-                uint8_t temp_data[commandList[].data_length] = {0, 0, 0, 0};
+                uint8_t temp_data[commandList[GET_TEMPERATURE].data_length] = {0, 0, 0, 0};
                 xSemaphoreTake(temperature_mutex, portMAX_DELAY);
                 temp_union.a = last_motor_temperature;
                 temp_data[BYTE_0] = temp_union.bytes[BYTE_0];
@@ -109,7 +106,7 @@ void can_servo::receive_message() {
                 xSemaphoreGive(target_angle_velocity_mutex);
 
             }else if (rxMessage.identifier == ((id << ID_OFFSET) | SET_OFFSET) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | SET_OFFSET)) {
-                if (rxMessage.data_length_code == commandList[].data_length) {
+                if (rxMessage.data_length_code == commandList[SET_OFFSET].data_length) {
                     xSemaphoreTake(motor_offset_mutex, portMAX_DELAY);
                     temp_union.bytes[BYTE_0] = rxMessage.data[BYTE_0];
                     temp_union.bytes[BYTE_1] = rxMessage.data[BYTE_1];
@@ -119,7 +116,7 @@ void can_servo::receive_message() {
                     xSemaphoreGive(motor_offset_mutex);
                 }
             }else if (rxMessage.identifier == ((id << ID_OFFSET) | SET_CURRENT_LIMIT) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | SET_CURRENT_LIMIT)) { 
-                if (rxMessage.data_length_code == commandList[].data_length) {
+                if (rxMessage.data_length_code == commandList[SET_CURRENT_LIMIT].data_length) {
                     xSemaphoreTake(current_mutex, portMAX_DELAY);
                     temp_union.bytes[BYTE_0] = rxMessage.data[BYTE_0];
                     temp_union.bytes[BYTE_1] = rxMessage.data[BYTE_1];
@@ -240,7 +237,7 @@ void can_servo::send_message(const command to_send, const uint8_t* message_conte
 
     union {
         float a;
-        uint8_t bytes[bytes_in_float];
+        uint8_t bytes[BYTES_IN_FLOAT];
     } temp_union;
 
     twai_message_t tx_message = {};

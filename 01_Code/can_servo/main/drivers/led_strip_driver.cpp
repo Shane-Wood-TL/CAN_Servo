@@ -5,7 +5,7 @@
  * @date 14/12/2024
 */
 
-#include "../include/led_strip_driver.h"
+#include "../include/drivers/led_strip_driver.h"
 
 
 led_strip_driver::led_strip_driver(uint8_t strip_gpio_pin, uint8_t number_of_leds_in_strip){

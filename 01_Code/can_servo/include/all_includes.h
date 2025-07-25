@@ -4,12 +4,14 @@
 #include <string>
 #include <string.h>
 #include <stdio.h>
-#include <atomic>
-
+#include <math.h>
 
 enum motor_status{OVERTEMP, OVERCURRENT, AWAKE, SLEEP, ERROR};
 enum motor_modes{POSITION_CONTROL, VELOCITY_CONTROL};
 enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
+
+
+
 #define VCC 3.3f
 #define COMMAND_ID_MASK 0x1F
 #define ID_OFFSET 5
@@ -67,8 +69,8 @@ enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
 #include "pinout.h"
 
 #include "servo_info.h"
-#include "mp6550.h"
-#include "can_servo.h"
+#include "drivers/mp6550.h"
+#include "drivers/can_servo.h"
 
 
 

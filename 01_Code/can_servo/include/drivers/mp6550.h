@@ -1,6 +1,6 @@
 #ifndef __mp6550__
 #define __mp6550__
-#include "all_includes.h"
+#include "../all_includes.h"
 
 #define MP6550_CURRENT_SENSITIVITY 0.2f
 

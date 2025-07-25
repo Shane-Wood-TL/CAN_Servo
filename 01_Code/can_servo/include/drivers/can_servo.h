@@ -1,44 +1,73 @@
 #ifndef __can_servo__
 #define __can_servo__
 
-#include "all_includes.h"
+#include "../all_includes.h"
+#include "led_strip_driver.h"
+#include "../servo_info.h"
 
 #define MAX_TWAI_TIMEOUT 1000
-#define MAX_COMMAND_COUNT 16
+#define MAX_COMMAND_COUNT 32
 
 #define GET_INFO_COMMAND_LENGTH 3
+#define UNUSED_0_COMMAND_LENGTH 0
 #define SET_MODE_SET_COMMAND_LENGTH 2
-#define GET_MODE_SET_COMMAND_LENGTH 2
-#define GET_POSITION_VELOCITY_COMMAND_LENGTH 8
-#define GET_CURRENT_DRAW_COMMAND_LENGTH 4
-#define GET_TEMPERATURE_COMMAND_LENGTH 4
-#define SET_GOAL_POSITION_VELOCITY_COMMAND_LENGTH 4
-#define SET_OFFSET_COMMAND_LENGTH 4
-#define SET_CURRENT_LIMIT_COMMAND_LENGTH 4
-#define SET_TEMPERATURE_LIMIT_COMMAND_LENGTH 4
-#define SET_LED_COMMAND_LENGTH 4
-#define SET_PID_COMMAND_LENGTH 5
 #define UNUSED_1_COMMAND_LENGTH 0
+#define GET_MODE_SET_COMMAND_LENGTH 2
 #define UNUSED_2_COMMAND_LENGTH 0
+#define GET_POSITION_VELOCITY_COMMAND_LENGTH 8
 #define UNUSED_3_COMMAND_LENGTH 0
+#define GET_CURRENT_DRAW_COMMAND_LENGTH 4
 #define UNUSED_4_COMMAND_LENGTH 0
+#define GET_TEMPERATURE_COMMAND_LENGTH 4
+#define UNUSED_5_COMMAND_LENGTH 0
+#define SET_GOAL_POSITION_VELOCITY_COMMAND_LENGTH 4
+#define UNUSED_6_COMMAND_LENGTH 0
+#define SET_OFFSET_COMMAND_LENGTH 4
+#define UNUSED_7_COMMAND_LENGTH 0
+#define SET_CURRENT_LIMIT_COMMAND_LENGTH 4
+#define UNUSED_8_COMMAND_LENGTH 0
+#define SET_TEMPERATURE_LIMIT_COMMAND_LENGTH 4
+#define UNUSED_9_COMMAND_LENGTH 0
+#define SET_LED_COMMAND_LENGTH 4
+#define UNUSED_10_COMMAND_LENGTH 0
+#define SET_PID_COMMAND_LENGTH 5
+#define UNUSED_11_COMMAND_LENGTH 0
+#define UNUSED_12_COMMAND_LENGTH 0
+#define UNUSED_13_COMMAND_LENGTH 0
+#define UNUSED_14_COMMAND_LENGTH 0
+
+
+
+
 
 #define GET_INFO_COMMAND_ID 0x000
+#define UNUSED_0_COMMAND_ID 0x001
 #define SET_MODE_SET_COMMAND_ID 0x002
+#define UNUSED_1_COMMAND_ID 0x003
 #define GET_MODE_SET_COMMAND_ID 0x004
+#define UNUSED_2_COMMAND_ID 0x005
 #define GET_POSITION_VELOCITY_COMMAND_ID 0x006
+#define UNUSED_3_COMMAND_ID 0x007
 #define GET_CURRENT_DRAW_COMMAND_ID 0x008
+#define UNUSED_4_COMMAND_ID 0x009
 #define GET_TEMPERATURE_COMMAND_ID 0x00A
+#define UNUSED_5_COMMAND_ID 0x00B
 #define SET_GOAL_POSITION_VELOCITY_COMMAND_ID 0x00C
+#define UNUSED_6_COMMAND_ID 0x00D
 #define SET_OFFSET_COMMAND_ID 0x00E
+#define UNUSED_7_COMMAND_ID 0x00F
 #define SET_CURRENT_LIMIT_COMMAND_ID 0x010
+#define UNUSED_8_COMMAND_ID 0x011
 #define SET_TEMPERATURE_LIMIT_COMMAND_ID 0x012
+#define UNUSED_9_COMMAND_ID 0x013
 #define SET_LED_COMMAND_ID 0x014
+#define UNUSED_10_COMMAND_ID 0x015
 #define SET_PID_COMMAND_ID 0x016
-#define UNUSED_1_COMMAND_ID 0x018
-#define UNUSED_2_COMMAND_ID 0x01A
-#define UNUSED_3_COMMAND_ID 0x01C
-#define UNUSED_4_COMMAND_ID 0x01E
+#define UNUSED_11_COMMAND_ID 0x017
+#define UNUSED_12_COMMAND_ID 0x018
+#define UNUSED_13_COMMAND_ID 0x01C
+#define UNUSED_14_COMMAND_ID 0x01E
+
 
 // Motor Status variables
 extern SemaphoreHandle_t motor_speed_mutex;
@@ -87,21 +116,32 @@ class can_servo{
     public:
     enum CommandID {
         GET_INFO                   = GET_INFO_COMMAND_ID,
+        UNUSED_0                   = UNUSED_0_COMMAND_ID,
         SET_MODE_STATE             = SET_MODE_SET_COMMAND_ID,
-        GET_MODE_STATE             = GET_MODE_SET_COMMAND_ID,
-        GET_POSITION_VELOCITY      = GET_POSITION_VELOCITY_COMMAND_ID,
-        GET_CURRENT_DRAW           = GET_CURRENT_DRAW_COMMAND_ID,
-        GET_TEMPERATURE            = GET_TEMPERATURE_COMMAND_ID,
-        SET_GOAL_POSITION_VELOCITY = SET_GOAL_POSITION_VELOCITY_COMMAND_ID,
-        SET_OFFSET                 = SET_OFFSET_COMMAND_ID,
-        SET_CURRENT_LIMIT          = SET_CURRENT_LIMIT_COMMAND_ID,
-        SET_TEMPERATURE_LIMIT      = SET_TEMPERATURE_LIMIT_COMMAND_ID,
-        SET_LED                    = SET_LED_COMMAND_ID,
-        SET_PID                    = SET_PID_COMMAND_ID,
         UNUSED_1                   = UNUSED_1_COMMAND_ID,
+        GET_MODE_STATE             = GET_MODE_SET_COMMAND_ID,
         UNUSED_2                   = UNUSED_2_COMMAND_ID,
+        GET_POSITION_VELOCITY      = GET_POSITION_VELOCITY_COMMAND_ID,
         UNUSED_3                   = UNUSED_3_COMMAND_ID,
+        GET_CURRENT_DRAW           = GET_CURRENT_DRAW_COMMAND_ID,
         UNUSED_4                   = UNUSED_4_COMMAND_ID,
+        GET_TEMPERATURE            = GET_TEMPERATURE_COMMAND_ID,
+        UNUSED_5                   = UNUSED_5_COMMAND_ID,
+        SET_GOAL_POSITION_VELOCITY = SET_GOAL_POSITION_VELOCITY_COMMAND_ID,
+        UNUSED_6                   = UNUSED_6_COMMAND_ID,
+        SET_OFFSET                 = SET_OFFSET_COMMAND_ID,
+        UNUSED_7                   = UNUSED_7_COMMAND_ID,
+        SET_CURRENT_LIMIT          = SET_CURRENT_LIMIT_COMMAND_ID,
+        UNUSED_8                   = UNUSED_8_COMMAND_ID,
+        SET_TEMPERATURE_LIMIT      = SET_TEMPERATURE_LIMIT_COMMAND_ID,
+        UNUSED_9                   = UNUSED_9_COMMAND_ID,
+        SET_LED                    = SET_LED_COMMAND_ID,
+        UNUSED_10                  = UNUSED_10_COMMAND_ID,
+        SET_PID                    = SET_PID_COMMAND_ID,
+        UNUSED_11                  = UNUSED_11_COMMAND_ID,
+        UNUSED_12                  = UNUSED_12_COMMAND_ID,
+        UNUSED_13                  = UNUSED_13_COMMAND_ID,
+        UNUSED_14                  = UNUSED_4_COMMAND_ID,
     };
     enum data_direction {to_host = 0x00, from_host, none};
 
@@ -114,21 +154,32 @@ class can_servo{
     command commandList[MAX_COMMAND_COUNT] = {
         //name, data length, data returned, data direction
         {GET_INFO, GET_INFO_COMMAND_LENGTH, true, to_host},
+        {UNUSED_0, UNUSED_0_COMMAND_LENGTH, false, none},
         {SET_MODE_STATE, SET_MODE_SET_COMMAND_LENGTH, false, from_host},
-        {GET_MODE_STATE, GET_MODE_SET_COMMAND_LENGTH, true, to_host},
-        {GET_POSITION_VELOCITY, GET_POSITION_VELOCITY_COMMAND_LENGTH, true, to_host},
-        {GET_CURRENT_DRAW, GET_CURRENT_DRAW_COMMAND_LENGTH, true, to_host},
-        {GET_TEMPERATURE, GET_TEMPERATURE_COMMAND_LENGTH, true, to_host},
-        {SET_GOAL_POSITION_VELOCITY, SET_GOAL_POSITION_VELOCITY_COMMAND_LENGTH, false, from_host},
-        {SET_OFFSET, SET_OFFSET_COMMAND_LENGTH, true, from_host},
-        {SET_CURRENT_LIMIT, SET_CURRENT_LIMIT_COMMAND_LENGTH, false, from_host},
-        {SET_TEMPERATURE_LIMIT, SET_TEMPERATURE_LIMIT_COMMAND_LENGTH, false, from_host},
-        {SET_LED, SET_LED_COMMAND_LENGTH, false, from_host},
-        {SET_PID, SET_PID_COMMAND_LENGTH, false, from_host},
         {UNUSED_1, UNUSED_1_COMMAND_LENGTH, false, none},
-        {UNUSED_2, UNUSED_2_COMMAND_LENGTH,false,none},
+        {GET_MODE_STATE, GET_MODE_SET_COMMAND_LENGTH, true, to_host},
+        {UNUSED_2, UNUSED_2_COMMAND_LENGTH, false, none},
+        {GET_POSITION_VELOCITY, GET_POSITION_VELOCITY_COMMAND_LENGTH, true, to_host},
         {UNUSED_3, UNUSED_3_COMMAND_LENGTH, false, none},
-        {UNUSED_4, UNUSED_4_COMMAND_LENGTH , false, none},
+        {GET_CURRENT_DRAW, GET_CURRENT_DRAW_COMMAND_LENGTH, true, to_host},
+        {UNUSED_4, UNUSED_4_COMMAND_LENGTH, false, none},
+        {GET_TEMPERATURE, GET_TEMPERATURE_COMMAND_LENGTH, true, to_host},
+        {UNUSED_5, UNUSED_5_COMMAND_LENGTH, false, none},
+        {SET_GOAL_POSITION_VELOCITY, SET_GOAL_POSITION_VELOCITY_COMMAND_LENGTH, false, from_host},
+        {UNUSED_6, UNUSED_6_COMMAND_LENGTH, false, none},
+        {SET_OFFSET, SET_OFFSET_COMMAND_LENGTH, true, from_host},
+        {UNUSED_7, UNUSED_7_COMMAND_LENGTH, false, none},
+        {SET_CURRENT_LIMIT, SET_CURRENT_LIMIT_COMMAND_LENGTH, false, from_host},
+        {UNUSED_8, UNUSED_8_COMMAND_LENGTH, false, none},
+        {SET_TEMPERATURE_LIMIT, SET_TEMPERATURE_LIMIT_COMMAND_LENGTH, false, from_host},
+        {UNUSED_9, UNUSED_9_COMMAND_LENGTH, false, none},
+        {SET_LED, SET_LED_COMMAND_LENGTH, false, from_host},
+        {UNUSED_10, UNUSED_10_COMMAND_LENGTH, false, none},
+        {SET_PID, SET_PID_COMMAND_LENGTH, false, from_host},
+        {UNUSED_11, UNUSED_11_COMMAND_LENGTH, false, none},
+        {UNUSED_12, UNUSED_12_COMMAND_LENGTH,false,none},
+        {UNUSED_13, UNUSED_13_COMMAND_LENGTH, false, none},
+        {UNUSED_14, UNUSED_14_COMMAND_LENGTH , false, none},
     };
     uint8_t id;
     void display_message(uint8_t *data, uint8_t length, uint16_t identifier);
