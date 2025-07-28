@@ -9,7 +9,7 @@
 #define MAX_COMMAND_COUNT 32
 
 #define GET_INFO_COMMAND_LENGTH 3
-#define UNUSED_0_COMMAND_LENGTH 0
+#define REBOOT_COMMAND_LENGHT 0
 #define SET_MODE_SET_COMMAND_LENGTH 2
 #define UNUSED_1_COMMAND_LENGTH 0
 #define GET_MODE_SET_COMMAND_LENGTH 2
@@ -32,16 +32,16 @@
 #define UNUSED_10_COMMAND_LENGTH 0
 #define SET_PID_COMMAND_LENGTH 5
 #define UNUSED_11_COMMAND_LENGTH 0
-#define UNUSED_12_COMMAND_LENGTH 0
+#define UNUSED_12_COMMAND_LENGTH 9
 #define UNUSED_13_COMMAND_LENGTH 0
-#define UNUSED_14_COMMAND_LENGTH 0
+#define UNUSED_14_COMMAND_LENGTH 9
 
 
 
 
 
 #define GET_INFO_COMMAND_ID 0x000
-#define UNUSED_0_COMMAND_ID 0x001
+#define REBOOT_COMMAND_ID 0x001
 #define SET_MODE_SET_COMMAND_ID 0x002
 #define UNUSED_1_COMMAND_ID 0x003
 #define GET_MODE_SET_COMMAND_ID 0x004
@@ -64,9 +64,9 @@
 #define UNUSED_10_COMMAND_ID 0x015
 #define SET_PID_COMMAND_ID 0x016
 #define UNUSED_11_COMMAND_ID 0x017
-#define UNUSED_12_COMMAND_ID 0x018
+#define RXSDO_COMMAND_ID 0x018
 #define UNUSED_13_COMMAND_ID 0x01C
-#define UNUSED_14_COMMAND_ID 0x01E
+#define TXSDO_COMMAND_ID 0x01E
 
 
 // Motor Status variables
@@ -116,7 +116,7 @@ class can_servo{
     public:
     enum CommandID {
         GET_INFO                   = GET_INFO_COMMAND_ID,
-        UNUSED_0                   = UNUSED_0_COMMAND_ID,
+        REBOOT                     = REBOOT_COMMAND_ID,
         SET_MODE_STATE             = SET_MODE_SET_COMMAND_ID,
         UNUSED_1                   = UNUSED_1_COMMAND_ID,
         GET_MODE_STATE             = GET_MODE_SET_COMMAND_ID,
@@ -139,9 +139,9 @@ class can_servo{
         UNUSED_10                  = UNUSED_10_COMMAND_ID,
         SET_PID                    = SET_PID_COMMAND_ID,
         UNUSED_11                  = UNUSED_11_COMMAND_ID,
-        UNUSED_12                  = UNUSED_12_COMMAND_ID,
+        RXSDO                  = RXSDO_COMMAND_ID,
         UNUSED_13                  = UNUSED_13_COMMAND_ID,
-        UNUSED_14                  = UNUSED_4_COMMAND_ID,
+        TXSDO                  = TXSDO_COMMAND_ID,
     };
     enum data_direction {to_host = 0x00, from_host, none};
 
@@ -154,7 +154,7 @@ class can_servo{
     command commandList[MAX_COMMAND_COUNT] = {
         //name, data length, data returned, data direction
         {GET_INFO, GET_INFO_COMMAND_LENGTH, true, to_host},
-        {UNUSED_0, UNUSED_0_COMMAND_LENGTH, false, none},
+        {REBOOT, REBOOT_COMMAND_LENGHT false, none},
         {SET_MODE_STATE, SET_MODE_SET_COMMAND_LENGTH, false, from_host},
         {UNUSED_1, UNUSED_1_COMMAND_LENGTH, false, none},
         {GET_MODE_STATE, GET_MODE_SET_COMMAND_LENGTH, true, to_host},
@@ -177,9 +177,9 @@ class can_servo{
         {UNUSED_10, UNUSED_10_COMMAND_LENGTH, false, none},
         {SET_PID, SET_PID_COMMAND_LENGTH, false, from_host},
         {UNUSED_11, UNUSED_11_COMMAND_LENGTH, false, none},
-        {UNUSED_12, UNUSED_12_COMMAND_LENGTH,false,none},
+        {RXSDO, UNUSED_12_COMMAND_LENGTH,false,none},
         {UNUSED_13, UNUSED_13_COMMAND_LENGTH, false, none},
-        {UNUSED_14, UNUSED_14_COMMAND_LENGTH , false, none},
+        {TXSDO, UNUSED_14_COMMAND_LENGTH , false, none},
     };
     uint8_t id;
     void display_message(uint8_t *data, uint8_t length, uint16_t identifier);
