@@ -1,8 +1,9 @@
 # Can Servo
 An upgrade to 55g servo motors to make them more usable
-This upgrade consists of removing the original mainboard + potentiomenter and upgrading them with the following features
 
-This is still a work in progess
+This is still a work in progress, check out the [wiki](https://github.com/Shane-Wood-TL/CAN_Servo/wiki) for more detailed information.
+
+This upgrade consists of removing the original mainboard + potentiomenter and upgrading them with the following features:
 ## Features
 - [x] Temperature and current sensing
 - [x] Magnetic encoder for positioning
