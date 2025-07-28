@@ -8,37 +8,71 @@
 #define NODE_ID_ENDPOINT 0          //1                      r
 #define NODE_ID_ENDPOINT_LENGTH 1
 
-#define receive_all_id_enpoint 1   //1                      r
-#define version_major_endpoint 2    //read only
-#define version_minor_endpoint 3    //read only
+#define RECEIVE_ALL_ENDPOINT 1
+#define RECEIVE_ALL_ENDPOINT_LENGTH 1
 
+#define VERSION_MAJOR_ENDPOINT 2    //read only
+#define VERSION_MAJOR_ENDPOINT_LENGTH 1
 
-motor_status, 1
-motor_mode, 1
+#define VERSION_MINOR_ENDPOINT 3    //read only
+#define VERSION_MAJOR_ENDPOINT_LENGTH 1
 
-last_current_draw, 4
-max_current_draw, 4
-current_limit_value, 4
+#define MOTOR_STATUS_ENDPOINT 4
+#define MOTOR_STATUS_ENDPOINT_LENGTH 1
 
-last_motor_temperature, 4
-max_motor_temperature, 4
-motor_temperature_limit, 4
+#define MOTOR_MODE_ENDPOINT 5
+#define MOTOR_MODE_ENDPOINT_LENGTH 1
 
-motor_offset_value, 4
-target_angle, 4
-target_velocity, 4
+#define LAST_CURRENT_DRAW_ENDPOINT 6 //last_current_draw, 4
+#define LAST_CURRENT_DRAW_ENDPOINT_LENGTH 4
 
-current_angle, 4
-current_velocity, 4
+#define MAX_CURRENT_DRAW_ENDPOINT 7 //max_current_draw, 4
+#define MAX_CURRENT_DRAW_ENDPOINT_LENGTH 4
 
-pid_P, 4
-pid_I, 4
-pid_D, 4
+#define CURRENT_LIMIT_VALUE_ENDPOINT 8 //current_limit_value, 4
+#define CURRENT_LIMIT_VALUE_ENDPOINT_LENGTH 4
 
-led_r, 4
-led_g, 4
-led_b, 4
+#define LAST_MOTOR_TEMPERATURE_ENDPOINT 9 //last_motor_temperature, 4
+#define LAST_MOTOR_TEMPERATURE_ENDPOINT_LENGTH 4
 
+#define MAX_MOTOR_TEMPERATURE_ENDPOINT 10 //max_motor_temperature, 4
+#define MAX_MOTOR_TEMPERATURE_ENDPOINT_LENGTH 4
+
+#define MOTOR_TEMPERATURE_LIMIT_ENDPOINT 11 //motor_temperature_limit, 4
+#define MOTOR_TEMPERATURE_LIMIT_ENDPOINT_LENGTH 4
+
+#define MOTOR_OFFSET_VALUE_ENDPOINT 12 //motor_offset_value, 4
+#define MOTOR_OFFSET_VALUE_ENDPOINT_LENGTH 4
+
+#define TARGET_ANGLE_ENDPOINT 13 //target_angle, 4
+#define TARGET_ANGLE_ENDPOINT_LENGTH 4
+
+#define TARGET_VELOCITY_ENDPOINT 14 //target_velocity, 4
+_ENDPOINT_LENGTH 1
+
+#define CURRENT_ANGLE_ENDPOINT 15 //current_angle, 4
+#define CURRENT_ANGLE_ENDPOINT_LENGTH 4
+
+#define CURRENT_VELOCITY_ENDPOINT 16 //current_velocity, 4
+#define CURRENT_VELOCITY_ENDPOINT_LENGTH 4
+
+#define PID_P_ENDPOINT 17 //pid_P, 4
+#define PID_P_ENDPOINT_LENGTH 4
+
+#define PID_I_ENDPOINT 18 //pid_I, 4
+#define PID_I_ENDPOINT_LENGTH 4
+
+#define PID_D_ENDPOINT 19 //pid_D, 4
+#define PID_D_ENDPOINT_LENGTH 4
+
+#define LED_R_ENDPOINT 20 //led_r, 4
+#define LED_R_ENDPOINT_LENGTH 1
+
+#define LED_G_ENDPOINT 21 //led_g, 4
+#define LED_G_ENDPOINT_LENGTH 1
+
+#define LED_B_ENDPOINT 22 //led_b, 4
+#define LED_B_ENDPOINT_LENGTH 1
 */
 
 enum endpoint_rw{READ, WRITE, READ_WRITE};
@@ -48,7 +82,29 @@ struct endpoint_structure{
     endpoint_rw read_write;
 }
 
-#define ENDPOINT_COUNT 100
+#define ENDPOINT_COUNT 23
 endpoint_structure endpoint_list[ENDPOINT_COUNT] = {
-    {NODE_ID_ENDPOINT, NODE_ID_ENDPOINT_LENGTH, READ},
+    {NODE_ID_ENDPOINT,                 NODE_ID_ENDPOINT_LENGTH,                 READ},
+    {RECEIVE_ALL_ENDPOINT,             RECEIVE_ALL_ENDPOINT_LENGHT,             READ},
+    {VERSION_MAJOR_ENDPOINT,           VERSION_MAJOR_ENDPOINT_LENGHT,           READ},
+    {VERSION_MINOR_ENDPOINT,           VERSION_MINOR_ENDPOINT_LENGHT,           READ},
+    {MOTOR_STATUS_ENDPOINT,            MOTOR_STATUS_ENDPOINT_LENGHT,            READ_WRITE},
+    {MOTOR_MODE_ENDPOINT,              MOTOR_MODE_ENDPOINT_LENGHT,              READ_WRITE},
+    {LAST_CURRENT_DRAW_ENDPOINT,       LAST_CURRENT_DRAW_ENDPOINT_LENGHT,       READ},
+    {MAX_CURRENT_DRAW_ENDPOINT,        MAX_CURRENT_DRAW_ENDPOINT_LENGHT,        READ_WRITE},
+    {CURRENT_LIMIT_VALUE_ENDPOINT,     CURRENT_LIMIT_VALUE_ENDPOINT_LENGHT,     READ_WRITE},
+    {LAST_MOTOR_TEMPERATURE_ENDPOINT,  LAST_MOTOR_TEMPERATURE_ENDPOINT_LENGHT,  READ},
+    {MAX_MOTOR_TEMPERATURE_ENDPOINT,   MAX_MOTOR_TEMPERATURE_ENDPOINT_LENGHT,   READ_WRITE},
+    {MOTOR_TEMPERATURE_LIMIT_ENDPOINT, MOTOR_TEMPERATURE_LIMIT_ENDPOINT_LENGHT, READ_WRITE},
+    {MOTOR_OFFSET_VALUE_ENDPOINT,      MOTOR_OFFSET_VALUE_ENDPOINT_LENGHT,      READ_WRITE},
+    {TARGET_ANGLE_ENDPOINT,            TARGET_ANGLE_ENDPOINT_LENGHT,            READ_WRITE},
+    {TARGET_VELOCITY_ENDPOINT,         TARGET_VELOCITY_ENDPOINT_LENGHT,         READ_WRITE},
+    {CURRENT_ANGLE_ENDPOINT,           CURRENT_ANGLE_ENDPOINT_LENGHT,           READ},
+    {CURRENT_VELOCITY_ENDPOINT,        CURRENT_VELOCITY_ENDPOINT_LENGHT,        READ},
+    {PID_P_ENDPOINT,                   PID_P_ENDPOINT_LENGHT,                   READ_WRITE},
+    {PID_I_ENDPOINT,                   PID_I_ENDPOINT_LENGHT,                   READ_WRITE},
+    {PID_D_ENDPOINT,                   PID_D_ENDPOINT_LENGHT,                   READ_WRITE},
+    {LED_R_ENDPOINT,                   LED_R_ENDPOINT_LENGHT,                   READ_WRITE},
+    {LED_G_ENDPOINT,                   LED_G_ENDPOINT_LENGHT,                   READ_WRITE},
+    {LED_B_ENDPOINT,                   LED_B_ENDPOINT,                          READ_WRITE},
 }
