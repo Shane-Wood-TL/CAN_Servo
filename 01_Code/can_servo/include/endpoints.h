@@ -4,6 +4,9 @@
 /*
 //      endpoint id                 data length (bytes)     read/write
 
+#define RXSDO_OFFSET 1
+#define TXSDO_OFFSET 1
+
 
 #define NODE_ID_ENDPOINT 0          //1                      r
 #define NODE_ID_ENDPOINT_LENGTH 1
