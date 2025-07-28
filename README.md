@@ -23,6 +23,11 @@ This is still a work in progess
 - [X] "All respond" node id
 <br>
 
+### Planned Features
+- [ ] Add RXSDO and TXSDO for getting and setting values without a specified command
+- [ ] Reboot Command
+<br>
+
 ### Additional Work:
 - [ ] Upload CAD
 - [ ] Upload PCB
