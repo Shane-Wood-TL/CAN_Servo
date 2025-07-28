@@ -4,6 +4,7 @@
 #include "../all_includes.h"
 #include "led_strip_driver.h"
 #include "../servo_info.h"
+#include "../endpoints.h"
 
 #define MAX_TWAI_TIMEOUT 1000
 #define MAX_COMMAND_COUNT 32
@@ -32,9 +33,9 @@
 #define UNUSED_10_COMMAND_LENGTH 0
 #define SET_PID_COMMAND_LENGTH 5
 #define UNUSED_11_COMMAND_LENGTH 0
-#define UNUSED_12_COMMAND_LENGTH 9
+#define RXSDO_COMMAND_LENGTH 9
 #define UNUSED_13_COMMAND_LENGTH 0
-#define UNUSED_14_COMMAND_LENGTH 9
+#define TXSDO_COMMAND_ID_LENGTH 9
 
 
 
@@ -143,7 +144,7 @@ class can_servo{
         UNUSED_13                  = UNUSED_13_COMMAND_ID,
         TXSDO                  = TXSDO_COMMAND_ID,
     };
-    enum data_direction {to_host = 0x00, from_host, none};
+    enum data_direction {to_host, from_host, none};
 
     struct command{
         uint8_t id;
@@ -177,9 +178,9 @@ class can_servo{
         {UNUSED_10, UNUSED_10_COMMAND_LENGTH, false, none},
         {SET_PID, SET_PID_COMMAND_LENGTH, false, from_host},
         {UNUSED_11, UNUSED_11_COMMAND_LENGTH, false, none},
-        {RXSDO, UNUSED_12_COMMAND_LENGTH,false,none},
+        {RXSDO, RXSDO_COMMAND_ID_LENGTH,false,from_host},
         {UNUSED_13, UNUSED_13_COMMAND_LENGTH, false, none},
-        {TXSDO, UNUSED_14_COMMAND_LENGTH , false, none},
+        {TXSDO, TXSDO_COMMAND_ID_LENGTH , true, to_host},
     };
     uint8_t id;
     void display_message(uint8_t *data, uint8_t length, uint16_t identifier);
