@@ -3,8 +3,40 @@
 
 void can_bus(void *pv){
 
+    #ifdef CAN_25K
+        static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_25KBITS();
+    #endif
+    
+    #ifdef CAN_50K
+        static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_50KBITS();
+    #endif
+    
+    #ifdef CAN_100K
+        static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_100KBITS();
+    #endif
+    
+    #ifdef CAN_125K
+        static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_125KBITS();
+    #endif
+    
+    #ifdef CAN_250K
+        static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();
+    #endif
+    
+    #ifdef CAN_500K
+        static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
+    #endif
+    
+    #ifdef CAN_800K
+        static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_800KBITS();
+    #endif
+    
+    #ifdef CAN_1M
+        static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS();
+    #endif
 
-    static const twai_timing_config_t t_config = TWAI_TIMING_CONFIG_250KBITS();
+
+
     static const twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
 
 
