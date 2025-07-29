@@ -1,7 +1,7 @@
 #ifndef __pinout__
 #define __pinout__
 
-#include "all_includes.h"
+#include "driver/gpio.h"
 
 #define in1_pin GPIO_NUM_18
 #define in2_pin GPIO_NUM_15

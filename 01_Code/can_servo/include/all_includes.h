@@ -59,8 +59,11 @@ enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
 #include "freertos/queue.h"
 #include "freertos/timers.h"
 #include "freertos/semphr.h"
-
 #include "driver/gpio.h"
+
+#include "endpoints.h"
+
+
 #include "driver/twai.h"
 #include "driver/ledc.h"
 #include "esp_adc/adc_oneshot.h"
@@ -69,8 +72,6 @@ enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
 #include "pinout.h"
 
 #include "servo_info.h"
-#include "drivers/mp6550.h"
-#include "drivers/can_servo.h"
 
 
 

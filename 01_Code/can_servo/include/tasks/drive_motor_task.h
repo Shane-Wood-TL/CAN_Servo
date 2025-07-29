@@ -3,7 +3,7 @@
 
 #include "../all_includes.h"
 #include "../supporting/get_shortest_angle.h"
-
+#include "../drivers/mp6550.h"
 
 #define DRIVE_MOTOR_TASK_DELAY 10
 #define INTEGRAL_ON_LARGE_CHANGE_RESET 10.0f

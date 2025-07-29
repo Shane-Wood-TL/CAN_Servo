@@ -14,6 +14,10 @@
 
 extern adc_oneshot_unit_handle_t adc_handle;
 
+extern SemaphoreHandle_t temperature_mutex;
+extern float last_motor_temperature;
+extern float max_motor_temperature;
+extern float motor_temperature_limit;
 
 void read_temperature(void *pv);
 #endif /*__READ_TEMPERATURE_TASK_H__*/

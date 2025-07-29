@@ -9,6 +9,7 @@
 #define __led_strip_driver__
 #include "../all_includes.h"
 #include "led_strip.h"
+#include "driver/ledc.h"
 
 #define rmt_counter_clock_frequency (10000000)  ///< 10MHz for the rmt counter clock
 #define rmt_channel_memory_size  (64)  ///< the memory size of each RMT channel, in words (4 bytes)
