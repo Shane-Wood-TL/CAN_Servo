@@ -1,7 +1,8 @@
 #include "all_includes.h"
 
 
-
+#ifndef  __CAN_ENDPOINTS__
+#define __CAN_ENDPOINTS__
 //      endpoint id                 data length (bytes)     read/write
 
 #define RXGEN_OFFSET_SW 1
@@ -111,3 +112,5 @@ endpoint_structure_sw endpoint_list[ENDPOINT_COUNT_SW] = {
     {LED_G_ENDPOINT_SW,                   LED_G_ENDPOINT_LENGTH_SW,                   READ_WRITE_SW},
     {LED_B_ENDPOINT_SW,                   LED_B_ENDPOINT_SW,                          READ_WRITE_SW},
 }
+
+#endif

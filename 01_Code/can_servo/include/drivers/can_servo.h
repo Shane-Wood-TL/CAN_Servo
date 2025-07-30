@@ -4,7 +4,7 @@
 #include "../all_includes.h"
 #include "led_strip_driver.h"
 #include "../servo_info.h"
-#include "../endpoints.h"
+#include "../CAN_endpoints.h"
 
 #define MAX_TWAI_TIMEOUT 1000
 #define MAX_COMMAND_COUNT 32

@@ -61,7 +61,7 @@ enum pid_message_types{PID_MESSAGE_P, PID_MESSAGE_I, PID_MESSAGE_D};
 #include "freertos/semphr.h"
 #include "driver/gpio.h"
 
-#include "endpoints.h"
+#include "CAN_endpoints.h"
 
 
 #include "driver/twai.h"
