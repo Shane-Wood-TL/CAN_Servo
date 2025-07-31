@@ -7,33 +7,33 @@ can_servo::can_servo(uint8_t id){
     this->id = id;
 
 
-    commandList[GET_INFO] =  {GET_INFO, GET_INFO_COMMAND_LENGTH, true, to_host};
-    commandList[REBOOT_] =    {REBOOT_, RESTART_COMMAND_LENGTH, false, none};
-    commandList[SET_MODE_STATE ] =      {SET_MODE_STATE, SET_MODE_SET_COMMAND_LENGTH, false, from_host};
-    commandList[UNUSED_1] =       {UNUSED_1, UNUSED_1_COMMAND_LENGTH, false, none};
-    commandList[GET_MODE_STATE] =       {GET_MODE_STATE, GET_MODE_SET_COMMAND_LENGTH, true, to_host};
-    commandList[UNUSED_2] =       {UNUSED_2, UNUSED_2_COMMAND_LENGTH, false, none};
-    commandList[GET_POSITION_VELOCITY] =       {GET_POSITION_VELOCITY, GET_POSITION_VELOCITY_COMMAND_LENGTH, true, to_host};
-    commandList[UNUSED_3] =       {UNUSED_3, UNUSED_3_COMMAND_LENGTH, false, none};
-    commandList[GET_CURRENT_DRAW] =       {GET_CURRENT_DRAW, GET_CURRENT_DRAW_COMMAND_LENGTH, true, to_host};
-    commandList[UNUSED_4] =       {UNUSED_4, UNUSED_4_COMMAND_LENGTH, false, none};
-    commandList[GET_TEMPERATURE] =       {GET_TEMPERATURE, GET_TEMPERATURE_COMMAND_LENGTH, true, to_host};
-    commandList[UNUSED_5] =       {UNUSED_5, UNUSED_5_COMMAND_LENGTH, false, none};
-    commandList[SET_GOAL_POSITION_VELOCITY] =       {SET_GOAL_POSITION_VELOCITY, SET_GOAL_POSITION_VELOCITY_COMMAND_LENGTH, false, from_host};
-    commandList[UNUSED_6] =       {UNUSED_6, UNUSED_6_COMMAND_LENGTH, false, none};
-    commandList[SET_OFFSET] =       {SET_OFFSET, SET_OFFSET_COMMAND_LENGTH, true, from_host};
-    commandList[UNUSED_7] =       {UNUSED_7, UNUSED_7_COMMAND_LENGTH, false, none};
-    commandList[SET_CURRENT_LIMIT  ] =     {SET_CURRENT_LIMIT, SET_CURRENT_LIMIT_COMMAND_LENGTH, false, from_host};
-    commandList[UNUSED_8  ] =     {UNUSED_8, UNUSED_8_COMMAND_LENGTH, false, none};
-    commandList[SET_TEMPERATURE_LIMIT ] =      {SET_TEMPERATURE_LIMIT, SET_TEMPERATURE_LIMIT_COMMAND_LENGTH, false, from_host};
-    commandList[UNUSED_9 ] =      {UNUSED_9, UNUSED_9_COMMAND_LENGTH, false, none};
-    commandList[SET_LED  ] =     {SET_LED, SET_LED_COMMAND_LENGTH, false, from_host};
-    commandList[UNUSED_10 ] =      {UNUSED_10, UNUSED_10_COMMAND_LENGTH, false, none};
-    commandList[SET_PID ] =      {SET_PID, SET_PID_COMMAND_LENGTH, false, from_host};
-    commandList[UNUSED_11 ] =      {UNUSED_11, UNUSED_11_COMMAND_LENGTH, false, none};
-    commandList[RXGEN]=    {RXGEN, RXSDO_COMMAND_LENGTH, false,from_host};
-    commandList[UNUSED_13] =  {UNUSED_13, UNUSED_13_COMMAND_LENGTH, false, none};
-    commandList[TXGEN] =    {TXGEN, TXSDO_COMMAND_LENGTH , true, to_host};
+    commandList[GET_INFO] =                    {GET_INFO,                    GET_INFO_COMMAND_LENGTH,                      true,     to_host};
+    commandList[REBOOT_] =                     {REBOOT_,                     RESTART_COMMAND_LENGTH,                       false,    none};
+    commandList[SET_MODE_STATE ] =             {SET_MODE_STATE,              SET_MODE_SET_COMMAND_LENGTH,                  false,    from_host};
+    commandList[UNUSED_1] =                    {UNUSED_1,                    UNUSED_1_COMMAND_LENGTH,                      false,    none};
+    commandList[GET_MODE_STATE] =              {GET_MODE_STATE,              GET_MODE_SET_COMMAND_LENGTH,                  true,     to_host};
+    commandList[UNUSED_2] =                    {UNUSED_2,                    UNUSED_2_COMMAND_LENGTH,                      false,    none};
+    commandList[GET_POSITION_VELOCITY] =       {GET_POSITION_VELOCITY,       GET_POSITION_VELOCITY_COMMAND_LENGTH,         true,     to_host};
+    commandList[UNUSED_3] =                    {UNUSED_3,                    UNUSED_3_COMMAND_LENGTH,                      false,    none};
+    commandList[GET_CURRENT_DRAW] =            {GET_CURRENT_DRAW,            GET_CURRENT_DRAW_COMMAND_LENGTH,              true,     to_host};
+    commandList[UNUSED_4] =                    {UNUSED_4,                    UNUSED_4_COMMAND_LENGTH,                      false,    none};
+    commandList[GET_TEMPERATURE] =             {GET_TEMPERATURE,             GET_TEMPERATURE_COMMAND_LENGTH,               true,     to_host};
+    commandList[UNUSED_5] =                    {UNUSED_5,                    UNUSED_5_COMMAND_LENGTH,                      false,    none};
+    commandList[SET_GOAL_POSITION_VELOCITY] =  {SET_GOAL_POSITION_VELOCITY,  SET_GOAL_POSITION_VELOCITY_COMMAND_LENGTH,    false,    from_host};
+    commandList[UNUSED_6] =                    {UNUSED_6,                    UNUSED_6_COMMAND_LENGTH,                      false,    none};
+    commandList[SET_OFFSET] =                  {SET_OFFSET,                  SET_OFFSET_COMMAND_LENGTH,                    true,     from_host};
+    commandList[UNUSED_7] =                    {UNUSED_7,                    UNUSED_7_COMMAND_LENGTH,                      false,    none};
+    commandList[SET_CURRENT_LIMIT] =           {SET_CURRENT_LIMIT,           SET_CURRENT_LIMIT_COMMAND_LENGTH,             false,    from_host};
+    commandList[UNUSED_8] =                    {UNUSED_8,                    UNUSED_8_COMMAND_LENGTH,                      false,    none};
+    commandList[SET_TEMPERATURE_LIMIT] =       {SET_TEMPERATURE_LIMIT,       SET_TEMPERATURE_LIMIT_COMMAND_LENGTH,         false,    from_host};
+    commandList[UNUSED_9] =                    {UNUSED_9,                    UNUSED_9_COMMAND_LENGTH,                      false,    none};
+    commandList[SET_LED] =                     {SET_LED,                     SET_LED_COMMAND_LENGTH,                       false,    from_host};
+    commandList[UNUSED_10] =                   {UNUSED_10,                   UNUSED_10_COMMAND_LENGTH,                     false,    none};
+    commandList[SET_PID] =                     {SET_PID,                     SET_PID_COMMAND_LENGTH,                       false,    from_host};
+    commandList[UNUSED_11] =                   {UNUSED_11,                   UNUSED_11_COMMAND_LENGTH,                     false,    none};
+    commandList[RXGEN]=                        {RXGEN,                       RXSDO_COMMAND_LENGTH,                         false,    from_host};
+    commandList[UNUSED_13] =                   {UNUSED_13,                   UNUSED_13_COMMAND_LENGTH,                     false,    none};
+    commandList[TXGEN] =                       {TXGEN,                       TXSDO_COMMAND_LENGTH,                         true,     to_host};
 }
 
 
