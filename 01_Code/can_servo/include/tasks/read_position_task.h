@@ -3,8 +3,7 @@
 
 #include "../all_includes.h"
 
-#define MAX_RAW_POSITION 3297
-#define MIN_RAW_POSITION 0
+
 #define MAX_ANGLE 360.0f
 #define READ_POSITION_TASK_DELAY 10
 

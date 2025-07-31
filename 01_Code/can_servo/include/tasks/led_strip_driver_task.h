@@ -5,7 +5,9 @@
 
 #include "../drivers/led_strip_driver.h"
 
-
+extern SemaphoreHandle_t motor_status_mutex;
+extern uint8_t motor_status;
+extern uint8_t motor_mode; // Default to position control
 
 extern SemaphoreHandle_t LED_RGB_values_mutex;
 extern float led_r;

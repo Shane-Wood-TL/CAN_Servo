@@ -82,6 +82,7 @@ adc_oneshot_chan_cfg_t adc_config = {
 
 extern "C" void app_main(void)
 {
+    
     //Motor Status variables
     motor_speed_mutex                 = xSemaphoreCreateMutex();
     motor_status_mutex                = xSemaphoreCreateMutex();

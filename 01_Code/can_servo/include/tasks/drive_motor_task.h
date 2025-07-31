@@ -15,5 +15,28 @@
 
 
 extern mp6550 motor;
+
+extern SemaphoreHandle_t motor_status_mutex;
+extern uint8_t motor_status;
+extern uint8_t motor_mode; // Default to position control
+
+extern SemaphoreHandle_t target_angle_velocity_mutex;
+extern float target_angle;
+extern float target_velocity;
+
+extern SemaphoreHandle_t current_angle_velocity_mutex;
+extern float current_angle;
+extern float current_velocity;
+
+
+// Motor Position Variables
+extern SemaphoreHandle_t motor_offset_mutex;
+extern float motor_offset_value;
+
+
+extern SemaphoreHandle_t PID_values_mutex;
+extern float pid_P;
+extern float pid_I;
+extern float pid_D;
 void drive_motor(void *pv);
 #endif /*__DRIVE_MOTOR_TASK_H__*/

@@ -9,11 +9,11 @@
 #define MAX_TWAI_TIMEOUT 1000
 #define MAX_COMMAND_COUNT 32
 
-#define RXGEN_OFFSET_SW 1
-#define RXGEN_OFFSET_SW 1
+#define RXGEN_OFFSET 1
+#define RXGEN_OFFSET 1
 
 #define GET_INFO_COMMAND_LENGTH 3
-#define RESTART_COMMAND_LENGTH_SW 0
+#define RESTART_COMMAND_LENGTH 0
 #define SET_MODE_SET_COMMAND_LENGTH 2
 #define UNUSED_1_COMMAND_LENGTH 0
 #define GET_MODE_SET_COMMAND_LENGTH 2
@@ -36,14 +36,14 @@
 #define UNUSED_10_COMMAND_LENGTH 0
 #define SET_PID_COMMAND_LENGTH 5
 #define UNUSED_11_COMMAND_LENGTH 0
-#define RXSDO_COMMAND_LENGTH_SW 9
+#define RXSDO_COMMAND_LENGTH 9
 #define UNUSED_13_COMMAND_LENGTH 0
-#define TXSDO_COMMAND_LENGTH_SW 9
+#define TXSDO_COMMAND_LENGTH 9
 #define GET_INFO_COMMAND_ID 0x000
-#define REBOOT_COMMAND_ID_SW 0x001
-#define SET_MODE_SET_COMMAND_ID 0x002
+#define REBOOT_COMMAND_ID 0x001
+#define SET_MODE_COMMAND_ID 0x002
 #define UNUSED_1_COMMAND_ID 0x003
-#define GET_MODE_SET_COMMAND_ID 0x004
+#define GET_MODE_COMMAND_ID 0x004
 #define UNUSED_2_COMMAND_ID 0x005
 #define GET_POSITION_VELOCITY_COMMAND_ID 0x006
 #define UNUSED_3_COMMAND_ID 0x007
@@ -63,9 +63,9 @@
 #define UNUSED_10_COMMAND_ID 0x015
 #define SET_PID_COMMAND_ID 0x016
 #define UNUSED_11_COMMAND_ID 0x017
-#define RXGEN_COMMAND_ID_SW 0x018
+#define RXGEN_COMMAND_ID 0x018
 #define UNUSED_13_COMMAND_ID 0x01C
-#define TXGEN_COMMAND_ID_SW 0x01E
+#define TXGEN_COMMAND_ID 0x01E
 
 
 // Motor Status variables
@@ -110,15 +110,15 @@ extern SemaphoreHandle_t LED_RGB_values_mutex;
 extern float led_r;
 extern float led_g;
 extern float led_b;
- 
+
 class can_servo{
     public:
     enum CommandID {
         GET_INFO                   = GET_INFO_COMMAND_ID,
-        REBOOT_                     = REBOOT_COMMAND_ID_SW,
-        SET_MODE_STATE             = SET_MODE_SET_COMMAND_ID,
+        REBOOT_                     = REBOOT_COMMAND_ID,
+        SET_MODE_STATE             = SET_MODE_COMMAND_ID,
         UNUSED_1                   = UNUSED_1_COMMAND_ID,
-        GET_MODE_STATE             = GET_MODE_SET_COMMAND_ID,
+        GET_MODE_STATE             = GET_MODE_COMMAND_ID,
         UNUSED_2                   = UNUSED_2_COMMAND_ID,
         GET_POSITION_VELOCITY      = GET_POSITION_VELOCITY_COMMAND_ID,
         UNUSED_3                   = UNUSED_3_COMMAND_ID,
@@ -138,9 +138,9 @@ class can_servo{
         UNUSED_10                  = UNUSED_10_COMMAND_ID,
         SET_PID                    = SET_PID_COMMAND_ID,
         UNUSED_11                  = UNUSED_11_COMMAND_ID,
-        RXGEN_SW                   = RXGEN_COMMAND_ID_SW,
+        RXGEN                   = RXGEN_COMMAND_ID,
         UNUSED_13                  = UNUSED_13_COMMAND_ID,
-        TXGEN_SW                  = TXGEN_COMMAND_ID_SW,
+        TXGEN                  = TXGEN_COMMAND_ID,
     };
     enum data_direction {to_host, from_host, none};
 
@@ -159,7 +159,7 @@ class can_servo{
     void handle_TXSDO(twai_message_t rxMessage);
     void handle_RXSDO(twai_message_t rxMessage);
     can_servo(uint8_t id);
-    void send_message(const command to_send, const uint8_t* message_contents);
+    void send_message(const command to_send, const uint8_t* message_contents, uint8_t length = 0);
     void receive_message();
 };
 
