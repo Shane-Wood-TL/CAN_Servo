@@ -10,6 +10,7 @@ void drive_motor(void *pv){
     float last_target = 0.0f;
 
     bool is_sleeping = false;
+    motor.sleep();
     for(;;){          
         //drive motor
         xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
@@ -104,7 +105,7 @@ void drive_motor(void *pv){
                 
                 //printf("angle: %f, target: %f, error: %f, output: %f\n", current_angle, target_angle, error, output);  
             }
-             motor.driveMotor(last_motor_speed);
+            motor.driveMotor(last_motor_speed);
         }
 
         vTaskDelay(pdMS_TO_TICKS(DRIVE_MOTOR_TASK_DELAY));        

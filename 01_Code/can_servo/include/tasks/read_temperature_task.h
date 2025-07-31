@@ -14,6 +14,15 @@
 
 extern adc_oneshot_unit_handle_t adc_handle;
 
+extern SemaphoreHandle_t temperature_mutex;
+extern float last_motor_temperature;
+extern float max_motor_temperature;
+extern float motor_temperature_limit;
+
+
+extern SemaphoreHandle_t motor_status_mutex;
+extern uint8_t motor_status;
+extern uint8_t motor_mode; // Default to position control
 
 void read_temperature(void *pv);
 #endif /*__READ_TEMPERATURE_TASK_H__*/

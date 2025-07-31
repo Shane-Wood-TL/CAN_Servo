@@ -5,6 +5,35 @@
 
 can_servo::can_servo(uint8_t id){
     this->id = id;
+
+
+    commandList[GET_INFO] =  {GET_INFO, GET_INFO_COMMAND_LENGTH, true, to_host};
+    commandList[REBOOT_] =    {REBOOT_, RESTART_COMMAND_LENGTH, false, none};
+    commandList[SET_MODE_STATE ] =      {SET_MODE_STATE, SET_MODE_SET_COMMAND_LENGTH, false, from_host};
+    commandList[UNUSED_1] =       {UNUSED_1, UNUSED_1_COMMAND_LENGTH, false, none};
+    commandList[GET_MODE_STATE] =       {GET_MODE_STATE, GET_MODE_SET_COMMAND_LENGTH, true, to_host};
+    commandList[UNUSED_2] =       {UNUSED_2, UNUSED_2_COMMAND_LENGTH, false, none};
+    commandList[GET_POSITION_VELOCITY] =       {GET_POSITION_VELOCITY, GET_POSITION_VELOCITY_COMMAND_LENGTH, true, to_host};
+    commandList[UNUSED_3] =       {UNUSED_3, UNUSED_3_COMMAND_LENGTH, false, none};
+    commandList[GET_CURRENT_DRAW] =       {GET_CURRENT_DRAW, GET_CURRENT_DRAW_COMMAND_LENGTH, true, to_host};
+    commandList[UNUSED_4] =       {UNUSED_4, UNUSED_4_COMMAND_LENGTH, false, none};
+    commandList[GET_TEMPERATURE] =       {GET_TEMPERATURE, GET_TEMPERATURE_COMMAND_LENGTH, true, to_host};
+    commandList[UNUSED_5] =       {UNUSED_5, UNUSED_5_COMMAND_LENGTH, false, none};
+    commandList[SET_GOAL_POSITION_VELOCITY] =       {SET_GOAL_POSITION_VELOCITY, SET_GOAL_POSITION_VELOCITY_COMMAND_LENGTH, false, from_host};
+    commandList[UNUSED_6] =       {UNUSED_6, UNUSED_6_COMMAND_LENGTH, false, none};
+    commandList[SET_OFFSET] =       {SET_OFFSET, SET_OFFSET_COMMAND_LENGTH, true, from_host};
+    commandList[UNUSED_7] =       {UNUSED_7, UNUSED_7_COMMAND_LENGTH, false, none};
+    commandList[SET_CURRENT_LIMIT  ] =     {SET_CURRENT_LIMIT, SET_CURRENT_LIMIT_COMMAND_LENGTH, false, from_host};
+    commandList[UNUSED_8  ] =     {UNUSED_8, UNUSED_8_COMMAND_LENGTH, false, none};
+    commandList[SET_TEMPERATURE_LIMIT ] =      {SET_TEMPERATURE_LIMIT, SET_TEMPERATURE_LIMIT_COMMAND_LENGTH, false, from_host};
+    commandList[UNUSED_9 ] =      {UNUSED_9, UNUSED_9_COMMAND_LENGTH, false, none};
+    commandList[SET_LED  ] =     {SET_LED, SET_LED_COMMAND_LENGTH, false, from_host};
+    commandList[UNUSED_10 ] =      {UNUSED_10, UNUSED_10_COMMAND_LENGTH, false, none};
+    commandList[SET_PID ] =      {SET_PID, SET_PID_COMMAND_LENGTH, false, from_host};
+    commandList[UNUSED_11 ] =      {UNUSED_11, UNUSED_11_COMMAND_LENGTH, false, none};
+    commandList[RXGEN]=    {RXGEN, RXSDO_COMMAND_LENGTH, false,from_host};
+    commandList[UNUSED_13] =  {UNUSED_13, UNUSED_13_COMMAND_LENGTH, false, none};
+    commandList[TXGEN] =    {TXGEN, TXSDO_COMMAND_LENGTH , true, to_host};
 }
 
 
@@ -12,7 +41,7 @@ void can_servo::receive_message() {
     union{
         float a;
         uint8_t bytes[BYTES_IN_FLOAT];     
-      } temp_union;
+    } temp_union;
     
     uint32_t alerts_triggered;
     twai_read_alerts(&alerts_triggered, pdMS_TO_TICKS(MAX_TWAI_TIMEOUT));
@@ -29,8 +58,10 @@ void can_servo::receive_message() {
                 display_message(rxMessage.data, 0, rxMessage.identifier);
                 uint8_t info[commandList[GET_INFO].data_length] = {version_major, version_minor, node_id};
                 send_message(commandList[GET_INFO], info);
-
-
+                
+            } else if (rxMessage.identifier == ((id << ID_OFFSET) | REBOOT_COMMAND_ID) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | REBOOT_COMMAND_ID)) {
+                esp_restart();
+                
             } else if (rxMessage.identifier == ((id << ID_OFFSET) | SET_MODE_STATE) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | SET_MODE_STATE)) {
                 if (rxMessage.data_length_code == commandList[SET_MODE_STATE].data_length) {
                     xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
@@ -156,7 +187,10 @@ void can_servo::receive_message() {
                     pid_D = temp_union.a;
                 }
                 xSemaphoreGive(PID_values_mutex);
-                
+            }else if (rxMessage.identifier == ((id << ID_OFFSET) | RXGEN_COMMAND_ID) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | RXGEN_COMMAND_ID)){
+                handle_RXSDO(rxMessage);
+            }else if (rxMessage.identifier == ((id << ID_OFFSET) | TXGEN_COMMAND_ID) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | TXGEN_COMMAND_ID)){
+                handle_TXSDO(rxMessage);
             }else {
                 // Unhandled message ID
             }
@@ -164,8 +198,357 @@ void can_servo::receive_message() {
     }
 }
 
+void can_servo::handle_RXSDO(twai_message_t rxMessage){
+    union{
+        float a;
+        uint8_t bytes[BYTES_IN_FLOAT];     
+    } temp_union;
 
+    if(endpoint_list[rxMessage.data[BYTE_0]].READ_WRITE == WRITE or endpoint_list[rxMessage.data[BYTE_0]].READ_WRITE == READ_WRITE){
+        switch(rxMessage.data[BYTE_0]){
+            case(MOTOR_STATUS_ENDPOINT):{
+                if(rxMessage.data_length_code == MOTOR_STATUS_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
+                    motor_status = rxMessage.data[RXGEN_OFFSET];
+                    xSemaphoreGive(motor_status_mutex);
+                }
+                break;
+            }case(MOTOR_MODE_ENDPOINT):{
+                if(rxMessage.data_length_code == MOTOR_MODE_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
+                    motor_mode = rxMessage.data[RXGEN_OFFSET];
+                    xSemaphoreGive(motor_status_mutex);
+                }
+                break;
+                
+            }case(MAX_CURRENT_DRAW_ENDPOINT):{
+                if(rxMessage.data_length_code == MAX_CURRENT_DRAW_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(current_mutex, portMAX_DELAY);
+                    max_current_draw = temp_union.a;
+                    xSemaphoreGive(current_mutex);
+                }
+                break;
+                
+            }case(CURRENT_LIMIT_VALUE_ENDPOINT):{
+                if(rxMessage.data_length_code == CURRENT_LIMIT_VALUE_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(current_mutex, portMAX_DELAY);
+                    current_limit_value = temp_union.a;
+                    xSemaphoreGive(current_mutex);
+                }
+                break;
+                
+            }case(MAX_MOTOR_TEMPERATURE_ENDPOINT):{
+                if(rxMessage.data_length_code == MAX_MOTOR_TEMPERATURE_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(temperature_mutex, portMAX_DELAY);
+                    max_motor_temperature = temp_union.a;
+                    xSemaphoreGive(temperature_mutex);
+                }
+                break;
+                
+            }case(MOTOR_TEMPERATURE_LIMIT_ENDPOINT):{
+                if(rxMessage.data_length_code == MOTOR_TEMPERATURE_LIMIT_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(temperature_mutex, portMAX_DELAY);
+                    motor_temperature_limit = temp_union.a;
+                    xSemaphoreGive(temperature_mutex);
+                }
+                break;
+                
+            }case(MOTOR_OFFSET_VALUE_ENDPOINT):{
+                if(rxMessage.data_length_code == MOTOR_OFFSET_VALUE_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(motor_offset_mutex, portMAX_DELAY);
+                    motor_offset_value = temp_union.a;
+                    xSemaphoreGive(motor_offset_mutex);
+                }
+                break;
+                
+            }case(TARGET_ANGLE_ENDPOINT):{
+                if(rxMessage.data_length_code == TARGET_ANGLE_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
+                    target_angle = temp_union.a;
+                    xSemaphoreGive(target_angle_velocity_mutex);
+                }
+                break;
+                
+            }case(TARGET_VELOCITY_ENDPOINT):{
+                if(rxMessage.data_length_code == TARGET_VELOCITY_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
+                    target_velocity = temp_union.a;
+                    xSemaphoreGive(target_angle_velocity_mutex);
+                }
+                break;
+                
+            }case(PID_P_ENDPOINT):{
+                if(rxMessage.data_length_code == PID_P_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
+                    pid_P = temp_union.a;
+                    xSemaphoreGive(PID_values_mutex);
+                }
+                break;
+                
+            }case(PID_I_ENDPOINT):{
+                if(rxMessage.data_length_code == PID_I_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
+                    pid_I = temp_union.a;
+                    xSemaphoreGive(PID_values_mutex);
+                }
+                break;
+                
+            }case(PID_D_ENDPOINT):{
+                if(rxMessage.data_length_code == PID_D_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    memcpy(temp_union.bytes, &rxMessage.data[RXGEN_OFFSET], BYTES_IN_FLOAT);
+                    xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
+                    pid_D = temp_union.a;
+                    xSemaphoreGive(PID_values_mutex);
+                }
+                break;
+                
+            }case(LED_R_ENDPOINT):{
+                if(rxMessage.data_length_code == LED_R_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
+                    led_r = (float)rxMessage.data[RXGEN_OFFSET];
+                    xSemaphoreGive(LED_RGB_values_mutex);
+                }
+                break;
+                
+            }case(LED_G_ENDPOINT):{
+                if(rxMessage.data_length_code == LED_G_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
+                    led_g = (float)rxMessage.data[RXGEN_OFFSET];
+                    xSemaphoreGive(LED_RGB_values_mutex);
+                }
+                break;
+            }case(LED_B_ENDPOINT):{
+                if(rxMessage.data_length_code == LED_B_ENDPOINT_LENGTH+RXGEN_OFFSET){
+                    xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
+                    led_b = (float)rxMessage.data[RXGEN_OFFSET];
+                    xSemaphoreGive(LED_RGB_values_mutex);
+                }
+                break;
+            }
+        }   
+        }else{
+        return; //value is not writable
+    }
+}
 
+void can_servo::handle_TXSDO(twai_message_t rxMessage){
+    if(endpoint_list[rxMessage.data[BYTE_0]].READ_WRITE == READ or endpoint_list[rxMessage.data[BYTE_0]].READ_WRITE == READ_WRITE){
+        uint8_t data_to_send[8] = {0,0,0,0,0,0,0,0};
+
+        union{
+            float a;
+            uint8_t bytes[BYTES_IN_FLOAT];     
+        } temp_union;
+        
+        switch(rxMessage.data[BYTE_0]){
+            case(NODE_ID_ENDPOINT):{
+                data_to_send[BYTE_0] = NODE_ID_ENDPOINT;
+                data_to_send[TXSDO_OFFSET] = node_id;
+                //send_message(const command to_send, const uint8_t* message_contents, uint8_t length = 0)
+                send_message(commandList[TXGEN], data_to_send, NODE_ID_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(RECEIVE_ALL_ENDPOINT):{
+                data_to_send[BYTE_0] = RECEIVE_ALL_ENDPOINT;
+                data_to_send[TXSDO_OFFSET] = receive_all_id;
+                //send_message(const command to_send, const uint8_t* message_contents, uint8_t length = 0)
+                send_message(commandList[TXGEN], data_to_send, RECEIVE_ALL_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(VERSION_MAJOR_ENDPOINT):{
+                data_to_send[BYTE_0] = VERSION_MAJOR_ENDPOINT;
+                data_to_send[TXSDO_OFFSET] = version_major;
+                //send_message(const command to_send, const uint8_t* message_contents, uint8_t length = 0)
+                send_message(commandList[TXGEN], data_to_send, VERSION_MAJOR_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(VERSION_MINOR_ENDPOINT):{
+                data_to_send[BYTE_0] = VERSION_MINOR_ENDPOINT;
+                data_to_send[TXSDO_OFFSET] = version_minor;
+                //send_message(const command to_send, const uint8_t* message_contents, uint8_t length = 0)
+                send_message(commandList[TXGEN], data_to_send, VERSION_MINOR_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(MOTOR_STATUS_ENDPOINT):{
+                data_to_send[BYTE_0] = MOTOR_STATUS_ENDPOINT;
+                xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
+                data_to_send[TXSDO_OFFSET] = motor_status;
+                xSemaphoreGive(motor_status_mutex);
+                send_message(commandList[TXGEN], data_to_send, MOTOR_STATUS_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(MOTOR_MODE_ENDPOINT):{
+                data_to_send[BYTE_0] = MOTOR_MODE_ENDPOINT;
+                xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
+                data_to_send[TXSDO_OFFSET] = motor_mode;
+                xSemaphoreGive(motor_status_mutex);
+                send_message(commandList[TXGEN], data_to_send, MOTOR_MODE_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(LAST_CURRENT_DRAW_ENDPOINT):{
+                data_to_send[BYTE_0] = LAST_CURRENT_DRAW_ENDPOINT;
+                xSemaphoreTake(current_mutex, portMAX_DELAY);
+                temp_union.a = last_current_draw;
+                xSemaphoreGive(current_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], &temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, LAST_CURRENT_DRAW_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(MAX_CURRENT_DRAW_ENDPOINT):{
+                data_to_send[BYTE_0] = MAX_CURRENT_DRAW_ENDPOINT; 
+                xSemaphoreTake(current_mutex, portMAX_DELAY);
+                temp_union.a = max_current_draw;
+                xSemaphoreGive(current_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, MAX_CURRENT_DRAW_ENDPOINT_LENGTH+TXSDO_OFFSET); 
+                break;
+                
+            }case(CURRENT_LIMIT_VALUE_ENDPOINT):{
+                data_to_send[BYTE_0] = CURRENT_LIMIT_VALUE_ENDPOINT;
+                xSemaphoreTake(current_mutex, portMAX_DELAY);
+                temp_union.a = current_limit_value;
+                xSemaphoreGive(current_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, CURRENT_LIMIT_VALUE_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(LAST_MOTOR_TEMPERATURE_ENDPOINT):{
+                data_to_send[BYTE_0] = LAST_MOTOR_TEMPERATURE_ENDPOINT;
+                xSemaphoreTake(temperature_mutex, portMAX_DELAY);
+                temp_union.a = last_motor_temperature;
+                xSemaphoreGive(temperature_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, LAST_MOTOR_TEMPERATURE_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(MAX_MOTOR_TEMPERATURE_ENDPOINT):{
+                data_to_send[BYTE_0] = MAX_MOTOR_TEMPERATURE_ENDPOINT;
+                xSemaphoreTake(temperature_mutex, portMAX_DELAY);
+                temp_union.a = max_motor_temperature;
+                xSemaphoreGive(temperature_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, MAX_MOTOR_TEMPERATURE_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(MOTOR_TEMPERATURE_LIMIT_ENDPOINT):{
+                data_to_send[BYTE_0] = MOTOR_TEMPERATURE_LIMIT_ENDPOINT;
+                xSemaphoreTake(temperature_mutex, portMAX_DELAY);
+                temp_union.a = motor_temperature_limit;
+                xSemaphoreGive(temperature_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, MOTOR_TEMPERATURE_LIMIT_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(MOTOR_OFFSET_VALUE_ENDPOINT):{
+                data_to_send[BYTE_0] = MOTOR_OFFSET_VALUE_ENDPOINT;
+                xSemaphoreTake(motor_offset_mutex, portMAX_DELAY);
+                temp_union.a = motor_offset_value;
+                xSemaphoreGive(motor_offset_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, MOTOR_OFFSET_VALUE_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(TARGET_ANGLE_ENDPOINT):{
+                data_to_send[BYTE_0] = TARGET_ANGLE_ENDPOINT;
+                xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
+                temp_union.a = target_angle;
+                xSemaphoreGive(target_angle_velocity_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, TARGET_ANGLE_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(TARGET_VELOCITY_ENDPOINT):{
+                data_to_send[BYTE_0] = TARGET_VELOCITY_ENDPOINT;
+                xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
+                temp_union.a = target_velocity;
+                xSemaphoreGive(target_angle_velocity_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, TARGET_VELOCITY_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(CURRENT_ANGLE_ENDPOINT):{
+                data_to_send[BYTE_0] = CURRENT_ANGLE_ENDPOINT;
+                xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
+                temp_union.a = current_angle;
+                xSemaphoreGive(current_angle_velocity_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, CURRENT_ANGLE_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(CURRENT_VELOCITY_ENDPOINT):{
+                data_to_send[BYTE_0] = CURRENT_VELOCITY_ENDPOINT;
+                xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
+                temp_union.a = current_velocity;
+                xSemaphoreGive(current_angle_velocity_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, CURRENT_VELOCITY_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                 break;
+                
+            }case(PID_P_ENDPOINT):{
+                data_to_send[BYTE_0] = PID_P_ENDPOINT;
+                xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
+                temp_union.a = pid_P;
+                xSemaphoreGive(PID_values_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, PID_P_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(PID_I_ENDPOINT):{
+                data_to_send[BYTE_0] = PID_I_ENDPOINT;
+                xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
+                temp_union.a = pid_I;
+                xSemaphoreGive(PID_values_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, PID_I_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(PID_D_ENDPOINT):{
+                data_to_send[BYTE_0] = PID_D_ENDPOINT;
+                xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
+                temp_union.a = pid_D;
+                xSemaphoreGive(PID_values_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, PID_D_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(LED_R_ENDPOINT):{
+                data_to_send[BYTE_0] = LED_R_ENDPOINT;
+                xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
+                data_to_send[TXSDO_OFFSET] = (uint8_t)led_r;
+                xSemaphoreGive(LED_RGB_values_mutex);
+                send_message(commandList[TXGEN], data_to_send, LED_R_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(LED_G_ENDPOINT):{
+                data_to_send[BYTE_0] = LED_G_ENDPOINT;
+                xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
+                data_to_send[TXSDO_OFFSET] = (uint8_t)led_g;
+                xSemaphoreGive(LED_RGB_values_mutex);
+                send_message(commandList[TXGEN], data_to_send, LED_G_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+                
+            }case(LED_B_ENDPOINT):{
+                data_to_send[BYTE_0] = LED_B_ENDPOINT;
+                xSemaphoreTake(LED_RGB_values_mutex, portMAX_DELAY);
+                data_to_send[TXSDO_OFFSET] = (uint8_t)led_b;
+                xSemaphoreGive(LED_RGB_values_mutex);
+                send_message(commandList[TXGEN], data_to_send, LED_B_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+            }default:{
+                break;
+            }
+        }
+    }
+}
 
 
 
@@ -230,10 +613,11 @@ void can_servo::display_message(uint8_t *data, uint8_t length, uint16_t identifi
 
 
 
-void can_servo::send_message(const command to_send, const uint8_t* message_contents){
+void can_servo::send_message(const command to_send, const uint8_t* message_contents, uint8_t length){
     if(to_send.data_length == 0){
         return;
     }
+
 
     union {
         float a;
@@ -244,7 +628,11 @@ void can_servo::send_message(const command to_send, const uint8_t* message_conte
     tx_message.extd = 0;
     tx_message.rtr=0;
     tx_message.identifier = (node_id << ID_OFFSET) | to_send.id;
-    tx_message.data_length_code = to_send.data_length;
+    if (length == 0){
+        tx_message.data_length_code = to_send.data_length;
+    }else{
+        tx_message.data_length_code = length;
+    }
 
 
     
