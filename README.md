@@ -18,15 +18,17 @@ This upgrade consists of removing the original mainboard + potentiomenter and up
 - [X] Variable motor speed
 - [X] Limiting Current / Temperature
 - [X] Using RGB for status
-- [X] Velocity Control
 - [X] PID parameters over CAN
 - [X] Motor Sleep
 - [X] "All respond" node id
+- [X] Reboot Command
+- [X] Add RXSDO and TXSDO for getting and setting values without a specified command
 <br>
 
 ### Planned Features
-- [ ] Add RXSDO and TXSDO for getting and setting values without a specified command
-- [ ] Reboot Command
+- [ ] Velocity Control
+- [ ] Add MCU temperature TXSDO
+- [ ] Add MCU MAC address TXSDO
 <br>
 
 ### Additional Work:
