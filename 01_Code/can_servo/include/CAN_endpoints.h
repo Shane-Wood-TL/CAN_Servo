@@ -78,6 +78,11 @@
 #define LED_B_ENDPOINT 22 //led_b, 4
 #define LED_B_ENDPOINT_LENGTH 1
 
+#define CORE_TEMP_ENDPOINT 23
+#define CORE_TEMP_ENDPOINT_LENGTH 4
+
+#define MAC_ADDRESS_ENDPOINT 24
+#define MAC_ADDRESS_ENDPOINT_LENGTH 6
 
 enum endpoint_rw{READ, WRITE, READ_WRITE};
 typedef struct endpoint_structure{
@@ -86,6 +91,6 @@ typedef struct endpoint_structure{
     endpoint_rw READ_WRITE;
 } endpoint_structure;
 
-#define ENDPOINT_COUNT 23
+#define ENDPOINT_COUNT 25
 extern endpoint_structure endpoint_list[ENDPOINT_COUNT];
 #endif

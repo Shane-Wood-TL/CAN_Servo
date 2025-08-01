@@ -5,6 +5,7 @@
 #include "led_strip_driver.h"
 #include "../servo_info.h"
 #include "../CAN_endpoints.h"
+#include "esp_mac.h"
 
 #define MAX_TWAI_TIMEOUT 1000
 #define MAX_COMMAND_COUNT 32
@@ -12,7 +13,7 @@
 #define RXGEN_OFFSET 1
 #define RXGEN_OFFSET 1
 
-#define GET_INFO_COMMAND_LENGTH 3
+#define GET_INFO_COMMAND_LENGTH 4
 #define RESTART_COMMAND_LENGTH 0
 #define SET_MODE_SET_COMMAND_LENGTH 2
 #define UNUSED_1_COMMAND_LENGTH 0
@@ -39,6 +40,8 @@
 #define RXSDO_COMMAND_LENGTH 9
 #define UNUSED_13_COMMAND_LENGTH 0
 #define TXSDO_COMMAND_LENGTH 9
+
+
 #define GET_INFO_COMMAND_ID 0x000
 #define REBOOT_COMMAND_ID 0x001
 #define SET_MODE_COMMAND_ID 0x002
@@ -86,7 +89,7 @@ extern SemaphoreHandle_t temperature_mutex;
 extern float last_motor_temperature;
 extern float max_motor_temperature;
 extern float motor_temperature_limit;
-
+extern float esp_core_temperature;
 
 // Motor Position Variables
 extern SemaphoreHandle_t motor_offset_mutex;

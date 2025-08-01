@@ -1,4 +1,4 @@
-#include "../include/CAN_endpoints.h"
+#include "../../include/supporting/CAN_endpoints.h"
 
 endpoint_structure endpoint_list[ENDPOINT_COUNT] = {
     {NODE_ID_ENDPOINT,                 NODE_ID_ENDPOINT_LENGTH,                 READ},
@@ -24,6 +24,4 @@ endpoint_structure endpoint_list[ENDPOINT_COUNT] = {
     {LED_R_ENDPOINT,                   LED_R_ENDPOINT_LENGTH,                   READ_WRITE},
     {LED_G_ENDPOINT,                   LED_G_ENDPOINT_LENGTH,                   READ_WRITE},
     {LED_B_ENDPOINT,                   LED_B_ENDPOINT,                          READ_WRITE},
-    {CORE_TEMP_ENDPOINT,               CORE_TEMP_ENDPOINT_LENGTH,               READ},
-    {MAC_ADDRESS_ENDPOINT,             MAC_ADDRESS_ENDPOINT_LENGTH,             READ},
 };

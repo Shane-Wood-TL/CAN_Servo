@@ -47,8 +47,10 @@ void mp6550::wake(){
     gpio_set_level(this->sleep_p, true);
 }
 float mp6550::read_current(){
-    uint16_t raw_reading = 0;//adc1_get_raw(this->current_sense_channel_c);
-    float vout = raw_reading * VCC / MAX_ADC_INT;
+    int raw_current_reading;
+    adc_oneshot_read(adc_handle, current_sense_channel_c, &raw_current_reading);
+    //uint16_t raw_reading = adc_get_raw(this->current_sense_channel_c);
+    float vout = raw_current_reading * VCC / MAX_ADC_INT;
     vout = vout / MP6550_CURRENT_SENSITIVITY; //200mV/A sensitivity
     return vout;
 }

@@ -6,7 +6,7 @@
 
 #define TWAI_RX_QUEUE_SIZE 32
 #define TWAI_TX_QUEUE_SIZE 1
-#define CAN_BUS_TASK_DELAY 50
+#define CAN_BUS_TASK_DELAY 10
 
 
 

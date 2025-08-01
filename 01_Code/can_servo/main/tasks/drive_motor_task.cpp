@@ -5,11 +5,14 @@ void drive_motor(void *pv){
     static float integral = 0.0f;
     static float last_error = 0.0f;
 
+
+    static float vel_integral = 0.0f;
+    static float vel_last_error = 0.0f;
     int16_t last_motor_speed = 0;
     
     float last_target = 0.0f;
 
-    bool is_sleeping = false;
+    bool is_sleeping = true;
     motor.sleep();
     for(;;){          
         //drive motor
@@ -18,25 +21,31 @@ void drive_motor(void *pv){
         uint8_t current_motor_mode = motor_mode;
         xSemaphoreGive(motor_status_mutex);
 
-        
+        //printf("status: %d\n", current_motor_status);
+        //printf("mode: %d\n", current_motor_mode);
 
         if(current_motor_status == OVERTEMP){
+            printf("overtemp\n");
             motor.sleep();
             is_sleeping = true;
         }else if(current_motor_status == OVERCURRENT){
+            printf("over current\n");
             motor.sleep();
             is_sleeping = true;
         }else if(current_motor_status == AWAKE){
             if(is_sleeping){
+                printf("waking\n");
                 motor.wake();
                 is_sleeping = false;
             }
         }else if(current_motor_status == SLEEP){
             if(!is_sleeping){
+                printf("sleeping\n");
                 motor.sleep();
                 is_sleeping = true;
             }
         }else if(current_motor_status == ERROR){
+            printf("error\n");
             motor.sleep();
             is_sleeping = true;
         }
@@ -45,12 +54,52 @@ void drive_motor(void *pv){
                 
         
         if (current_motor_status == AWAKE){
+            //printf("awake\n");
             if(current_motor_mode == VELOCITY_CONTROL){
+                xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
                 xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
-                last_motor_speed = (int16_t)map(target_velocity, -100.0f, 100.0f, -4095.0f, 4095.0f);
-                xSemaphoreGive(target_angle_velocity_mutex);
-            }else if(current_motor_mode == POSITION_CONTROL){
+                float error = target_velocity;  
+                float dt = DRIVE_MOTOR_TASK_DELAY / M_to_S;  // time step in seconds
 
+                // Integral with anti-windup
+                vel_integral += error * dt;
+                if (vel_integral > INTEGRAL_LIMIT) vel_integral = INTEGRAL_LIMIT;
+                else if (vel_integral < -INTEGRAL_LIMIT) vel_integral = -INTEGRAL_LIMIT;
+
+                // Derivative with low-pass filtering
+                float derivative = (error - vel_last_error) / dt;
+                static float vel_last_filtered = 0.0f;
+                float filtered_derivative = LOW_PASS_FILTER_COEFFICIENT * derivative +
+                                            (1 - LOW_PASS_FILTER_COEFFICIENT) * vel_last_filtered;
+                vel_last_filtered = filtered_derivative;
+
+                vel_last_error = error;
+
+                // PID output
+                xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
+                float output = -(pid_P * error + pid_I * vel_integral + pid_D * filtered_derivative);
+                xSemaphoreGive(PID_values_mutex);
+
+                // Clamp output
+                if (output > MAX_ADC_INT) {
+                    last_motor_speed = MAX_ADC_INT;
+                } else if (output < -MAX_ADC_INT) {
+                    last_motor_speed = -MAX_ADC_INT;
+                } else {
+                    last_motor_speed = (int16_t)output;
+                }
+
+                // Stop near zero velocity
+                if (fabsf(error) < VELOCITY_ERROR_THRESHOLD) {
+                    last_motor_speed = 0;
+                    motor.break_motor();
+                }
+
+                xSemaphoreGive(target_angle_velocity_mutex);
+                xSemaphoreGive(current_angle_velocity_mutex);
+
+
+            }else if(current_motor_mode == POSITION_CONTROL){
                 xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
                 xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
                 xSemaphoreTake(motor_offset_mutex, portMAX_DELAY);

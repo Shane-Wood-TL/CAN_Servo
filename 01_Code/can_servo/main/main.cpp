@@ -28,7 +28,7 @@ SemaphoreHandle_t temperature_mutex;
 float last_motor_temperature = 0;
 float max_motor_temperature = 0;
 float motor_temperature_limit = 100;
-
+float esp_core_temperature = 0;
 
 
 // Motor Position Variables
@@ -50,9 +50,9 @@ float pid_I = 7.8f;
 float pid_D = 30.0f;
 
 SemaphoreHandle_t LED_RGB_values_mutex;
-float led_r = 255.0f;
+float led_r = 0.0f;
 float led_g = 0.0f;
-float led_b = 0.0f;
+float led_b = 255.0f;
 
 
 mp6550 motor(in1_pin, in2_pin, sleep_pin, current_sense_pin, current_sense_channel, LEDC_CHANNEL_0, LEDC_CHANNEL_1);

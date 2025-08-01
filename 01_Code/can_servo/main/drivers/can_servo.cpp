@@ -56,7 +56,7 @@ void can_servo::receive_message() {
                 printf("Received message with ID: 0x%03lX, Data Length: %d\n",
                    rxMessage.identifier, rxMessage.data_length_code);
                 display_message(rxMessage.data, 0, rxMessage.identifier);
-                uint8_t info[commandList[GET_INFO].data_length] = {version_major, version_minor, node_id};
+                uint8_t info[commandList[GET_INFO].data_length] = {version_major, version_minor, node_id, receive_all_id};
                 send_message(commandList[GET_INFO], info);
                 
             } else if (rxMessage.identifier == ((id << ID_OFFSET) | REBOOT_COMMAND_ID) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | REBOOT_COMMAND_ID)) {
@@ -188,8 +188,10 @@ void can_servo::receive_message() {
                 }
                 xSemaphoreGive(PID_values_mutex);
             }else if (rxMessage.identifier == ((id << ID_OFFSET) | RXGEN_COMMAND_ID) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | RXGEN_COMMAND_ID)){
+                printf("got rx sdo");
                 handle_RXSDO(rxMessage);
             }else if (rxMessage.identifier == ((id << ID_OFFSET) | TXGEN_COMMAND_ID) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | TXGEN_COMMAND_ID)){
+                printf("got txsdo");
                 handle_TXSDO(rxMessage);
             }else {
                 // Unhandled message ID
@@ -543,6 +545,21 @@ void can_servo::handle_TXSDO(twai_message_t rxMessage){
                 xSemaphoreGive(LED_RGB_values_mutex);
                 send_message(commandList[TXGEN], data_to_send, LED_B_ENDPOINT_LENGTH+TXSDO_OFFSET);
                 break;
+            }case(CORE_TEMP_ENDPOINT):{
+                data_to_send[BYTE_0] = CORE_TEMP_ENDPOINT;
+                xSemaphoreTake(temperature_mutex, portMAX_DELAY);
+                temp_union.a = esp_core_temperature;
+                xSemaphoreGive(temperature_mutex);
+                memcpy(&data_to_send[TXSDO_OFFSET], temp_union.bytes, BYTES_IN_FLOAT);
+                send_message(commandList[TXGEN], data_to_send, CORE_TEMP_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
+            }case(MAC_ADDRESS_ENDPOINT):{
+                data_to_send[BYTE_0] = MAC_ADDRESS_ENDPOINT;
+                uint8_t mac[6];
+                esp_read_mac(mac, ESP_MAC_WIFI_STA);
+                memcpy(&data_to_send[TXSDO_OFFSET], mac, BYTES_IN_MAC_ADDRESS);
+                send_message(commandList[TXGEN], data_to_send, MAC_ADDRESS_ENDPOINT_LENGTH+TXSDO_OFFSET);
+                break;
             }default:{
                 break;
             }
@@ -653,10 +670,10 @@ void can_servo::send_message(const command to_send, const uint8_t* message_conte
         tx_message.data[BYTE_2] = message_contents[BYTE_2];
         tx_message.data[BYTE_3] = message_contents[BYTE_3];
 
-        tx_message.data[BYTE_4] = message_contents[BYTE_0];
-        tx_message.data[BYTE_5] = message_contents[BYTE_1];
-        tx_message.data[BYTE_6] = message_contents[BYTE_2];
-        tx_message.data[BYTE_7] = message_contents[BYTE_3];
+        tx_message.data[BYTE_4] = message_contents[BYTE_4];
+        tx_message.data[BYTE_5] = message_contents[BYTE_5];
+        tx_message.data[BYTE_6] = message_contents[BYTE_6];
+        tx_message.data[BYTE_7] = message_contents[BYTE_7];
 
 
     }else if (to_send.id == GET_CURRENT_DRAW){
@@ -670,6 +687,11 @@ void can_servo::send_message(const command to_send, const uint8_t* message_conte
         tx_message.data[BYTE_1] = message_contents[BYTE_1];
         tx_message.data[BYTE_2] = message_contents[BYTE_2];
         tx_message.data[BYTE_3] = message_contents[BYTE_3];
+    }else if (to_send.id == TXGEN){
+        printf("")
+        for(uint8_t i = 0; i < length; i++){
+            tx_message.data[i] = message_contents[i];
+        }
     }else{
         return;
     }

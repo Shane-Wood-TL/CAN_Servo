@@ -1,7 +1,7 @@
 #ifndef __READ_TEMPERATURE_TASK_H__
 #define __READ_TEMPERATURE_TASK_H__
 #include "../all_includes.h"
-
+#include "driver/temperature_sensor.h"
 
 #define K_TO_C 273.15f
 #define THERMISTOR_RESISTOR_DIVIDER 10000.0f
@@ -18,7 +18,7 @@ extern SemaphoreHandle_t temperature_mutex;
 extern float last_motor_temperature;
 extern float max_motor_temperature;
 extern float motor_temperature_limit;
-
+extern float esp_core_temperature;
 
 extern SemaphoreHandle_t motor_status_mutex;
 extern uint8_t motor_status;
