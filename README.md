@@ -23,12 +23,14 @@ This upgrade consists of removing the original mainboard + potentiomenter and up
 - [X] "All respond" node id
 - [X] Reboot Command
 - [X] Add RXSDO and TXSDO for getting and setting values without a specified command
+- [X] Add MCU temperature TXSDO
+- [X] Add MCU MAC address TXSDO
+- [X] Basic Velocity Control
 <br>
 
 ### Planned Features
-- [ ] Velocity Control
-- [ ] Add MCU temperature TXSDO
-- [ ] Add MCU MAC address TXSDO
+- [ ] Proper Velocity Control (Change Velocity to RPM, rather than just "speed")
+
 <br>
 
 ### Additional Work:
