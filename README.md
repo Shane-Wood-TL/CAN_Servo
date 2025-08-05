@@ -30,13 +30,17 @@ This upgrade consists of removing the original mainboard + potentiomenter and up
 
 ### Planned Features
 - [ ] Proper Velocity Control (Change Velocity to RPM, rather than just "speed")
+- [ ] Node ID set in NVS rather than in code <br>
+      - Use a combination of MAC Address and receive all NODE ID <br>
+      - MAC address is polled using TXSDO, node id is sent back from controller <br>
+      - Node ID is saved to NVS <br>
 
 <br>
 
 ### Additional Work:
 - [ ] Upload CAD
-- [ ] Upload PCB
-- [ ] Upload Schematic
+- [ ] Upload (and Update) PCB
+- [ ] Upload (and Update) Schematic
 - [ ] PDF Build Guide
 <br>
 
