@@ -77,6 +77,7 @@ void can_bus(void *pv){
     can_servo can_bus_driver(node_id);
     for(;;){
         can_bus_driver.receive_message();
+        printf("CAN Bus Task running...\n");
         vTaskDelay(pdMS_TO_TICKS(CAN_BUS_TASK_DELAY));
     }
 }

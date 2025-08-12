@@ -108,7 +108,7 @@ void drive_motor(void *pv){
 
                 
                 //printf("Current Angle: %f\n", current_angle);
-                printf("Target Angle: %f\n", target_angle);
+                //printf("Target Angle: %f\n", target_angle);
                 //printf("Offset Value: %d\n", motor_offset_value);
                 //float error = target_angle - current_angle;
                 float error = get_shortest_angle(target_angle, current_angle);
@@ -152,7 +152,7 @@ void drive_motor(void *pv){
                 xSemaphoreGive(target_angle_velocity_mutex);
                 xSemaphoreGive(current_angle_velocity_mutex);
                 
-                //printf("angle: %f, target: %f, error: %f, output: %f\n", current_angle, target_angle, error, output);  
+                printf("angle: %f, target: %f, error: %f, output: %f\n", current_angle, target_angle, error, output);  
             }
             motor.driveMotor(last_motor_speed);
         }

@@ -30,7 +30,7 @@ led_strip_driver::led_strip_driver(uint8_t strip_gpio_pin, uint8_t number_of_led
 
 
 void led_strip_driver::set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t led_start, uint8_t led_end){
-    printf("LED updated: R:%d G:%d B:%d\n", r, g, b);
+    //printf("LED updated: R:%d G:%d B:%d\n", r, g, b);
     for(uint8_t led_to_change = led_start; led_to_change <= led_end; led_to_change++){
         (void)led_strip_set_pixel(led_strip, led_to_change, r,g,b);
     }

@@ -51,7 +51,7 @@ void can_servo::receive_message() {
 
         // Receive all available messages
         while (twai_receive(&rxMessage, 0) == ESP_OK) {
-
+            printf("got message\n");
             if (rxMessage.identifier == ((id << ID_OFFSET) | GET_INFO) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | GET_INFO)) {
                 printf("Received message with ID: 0x%03lX, Data Length: %d\n",
                    rxMessage.identifier, rxMessage.data_length_code);
@@ -688,10 +688,10 @@ void can_servo::send_message(const command to_send, const uint8_t* message_conte
         tx_message.data[BYTE_2] = message_contents[BYTE_2];
         tx_message.data[BYTE_3] = message_contents[BYTE_3];
     }else if (to_send.id == TXGEN){
-        printf("")
-        for(uint8_t i = 0; i < length; i++){
-            tx_message.data[i] = message_contents[i];
-        }
+        // printf("")
+        // for(uint8_t i = 0; i < length; i++){
+        //     tx_message.data[i] = message_contents[i];
+        // }
     }else{
         return;
     }
