@@ -16,6 +16,7 @@ mp6550::mp6550(gpio_num_t in1_p, gpio_num_t in2_p, gpio_num_t sleep_p, gpio_num_
 
 
 void mp6550::driveMotor(int16_t speed){
+    //printf("Speed: %d\n", speed);
     if(speed > 0){
         //forward
         ledc_set_duty(LEDC_LOW_SPEED_MODE, in1_ledc_channel, abs(speed));
@@ -23,6 +24,7 @@ void mp6550::driveMotor(int16_t speed){
 
         ledc_set_duty(LEDC_LOW_SPEED_MODE, in2_ledc_channel, 0);
         ledc_update_duty(LEDC_LOW_SPEED_MODE, in2_ledc_channel);
+
     }else if(speed < 0){
         //reverse
         ledc_set_duty(LEDC_LOW_SPEED_MODE, in2_ledc_channel, abs(speed));
@@ -30,6 +32,7 @@ void mp6550::driveMotor(int16_t speed){
 
         ledc_set_duty(LEDC_LOW_SPEED_MODE, in1_ledc_channel, 0);
         ledc_update_duty(LEDC_LOW_SPEED_MODE, in1_ledc_channel);
+
     }else{
         //stop
         ledc_set_duty(LEDC_LOW_SPEED_MODE, in2_ledc_channel, 0);

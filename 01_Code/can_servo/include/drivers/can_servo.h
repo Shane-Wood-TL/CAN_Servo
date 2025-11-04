@@ -114,6 +114,8 @@ extern float led_r;
 extern float led_g;
 extern float led_b;
 
+extern SemaphoreHandle_t TWAI_mutex;
+extern QueueHandle_t transmit_queue;
 class can_servo{
     public:
     enum CommandID {

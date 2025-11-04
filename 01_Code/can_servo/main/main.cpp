@@ -7,6 +7,12 @@
 #include "../include/tasks/drive_motor_task.h"
 #include "../include/tasks/led_strip_driver_task.h"
 
+#define CAN_BUS_TRANSMIT_TASK_STACK_SIZE 8096
+#define CAN_BUS_TRANSMIT_TASK_PRIORITY 1
+
+void can_bus_transmit_task(void *pv);
+void self_test_task(void *pv);
+
 SemaphoreHandle_t motor_speed_mutex;
 int16_t motor_speed = 0;
 
@@ -45,9 +51,9 @@ float current_velocity = 0;
 
 
 SemaphoreHandle_t PID_values_mutex;
-float pid_P = 85.0f;
-float pid_I = 7.8f;
-float pid_D = 30.0f;
+float pid_P = 50.0f;
+float pid_I = 5.0f;
+float pid_D = 3.0f;
 
 SemaphoreHandle_t LED_RGB_values_mutex;
 float led_r = 0.0f;
@@ -58,7 +64,7 @@ float led_b = 255.0f;
 mp6550 motor(in1_pin, in2_pin, sleep_pin, current_sense_pin, current_sense_channel, LEDC_CHANNEL_0, LEDC_CHANNEL_1);
 
 
-
+QueueHandle_t transmit_queue = NULL;
 
 adc_oneshot_unit_handle_t adc_handle = NULL;
 
@@ -76,13 +82,14 @@ adc_oneshot_chan_cfg_t adc_config = {
 };
 
 
+SemaphoreHandle_t TWAI_mutex = NULL;
 
-
-#define MOTOR_FREQUENCY 5000
+#define MOTOR_FREQUENCY 500
 
 extern "C" void app_main(void)
 {
-    
+    gpio_reset_pin(can_TX_pin);
+    gpio_reset_pin(can_RX_pin);
     //Motor Status variables
     motor_speed_mutex                 = xSemaphoreCreateMutex();
     motor_status_mutex                = xSemaphoreCreateMutex();
@@ -93,6 +100,9 @@ extern "C" void app_main(void)
     current_angle_velocity_mutex      = xSemaphoreCreateMutex();
     PID_values_mutex                  = xSemaphoreCreateMutex();
     LED_RGB_values_mutex              = xSemaphoreCreateMutex();
+
+    TWAI_mutex = xSemaphoreCreateMutex();
+    transmit_queue = xQueueCreate(10, sizeof(twai_message_t));
 
     gpio_set_direction(in1_pin, GPIO_MODE_OUTPUT);
     gpio_set_direction(in2_pin, GPIO_MODE_OUTPUT);
@@ -158,10 +168,78 @@ extern "C" void app_main(void)
     xTaskCreate(drive_motor, "drive_motor", DRIVE_MOTOR_STACK_SIZE, NULL, DRIVE_MOTOR_PRIORITY, NULL);
     xTaskCreate(can_bus, "can_bus", CAN_BUS_STACK_SIZE, NULL, CAN_BUS_PRIORITY, NULL);
     xTaskCreate(led_strip_driver_task, "led_strip_driver_task", LED_STRIP_DRIVER_TASK_STACK_SIZE, NULL, LED_STRIP_DRIVER_TASK_PRIORITY, NULL);
-        
+    //xTaskCreate(can_bus_transmit_task, "can_bus_transmit_task", CAN_BUS_TRANSMIT_TASK_STACK_SIZE, NULL, CAN_BUS_TRANSMIT_TASK_PRIORITY, NULL);
+
+    xTaskCreate(self_test_task, "self_test_task", CAN_BUS_TRANSMIT_TASK_STACK_SIZE, NULL, CAN_BUS_TRANSMIT_TASK_PRIORITY, NULL);
+    for(;;){
+        vTaskDelay(MAIN_TASK_DELAY);
+    }
+}
+
+void can_bus_transmit_task(void *pv){
+    can_servo can_bus_driver(node_id);
+    for(;;){
+        // Transmit the current state of the servo
+        twai_message_t received_message;
+        if (xQueueReceive(transmit_queue, &received_message, pdMS_TO_TICKS(500))) {
+            xSemaphoreTake(TWAI_mutex, portMAX_DELAY);
+            esp_err_t result = twai_transmit(&received_message, pdMS_TO_TICKS(MAX_TWAI_TIMEOUT));
+            xSemaphoreGive(TWAI_mutex);
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
+
+
+
+
+
+void self_test_task(void *pv){
+    
+    vTaskDelay(pdMS_TO_TICKS(10000)); // Wait for system to stabilize
+    twai_message_t received_message;
+    received_message.identifier = (node_id << ID_OFFSET) | SET_MODE_COMMAND_ID;
+    received_message.data_length_code = 2;
+    received_message.data[0] = POSITION_CONTROL;
+    received_message.data[1] = AWAKE;
+    received_message.self = 1;
+    printf("Sending wakeup and position control mode\n");
+
+    xSemaphoreTake(TWAI_mutex, portMAX_DELAY);
+    esp_err_t res = twai_transmit(&received_message, pdMS_TO_TICKS(MAX_TWAI_TIMEOUT));
+    xSemaphoreGive(TWAI_mutex);
+    if (res != ESP_OK) {
+        printf("Transmit failed: %s\n", esp_err_to_name(res));
+    }
+
+
+
+    received_message.identifier = (node_id << ID_OFFSET) | SET_GOAL_POSITION_VELOCITY_COMMAND_ID;
+    received_message.data_length_code = 4;
+    union{
+        float a;
+        uint8_t bytes[BYTES_IN_FLOAT];     
+    } temp_union;
+
+    
 
 
     for(;;){
-        vTaskDelay(MAIN_TASK_DELAY);
+        temp_union.a = 260.0f;
+        memcpy(&received_message.data[0], temp_union.bytes, BYTES_IN_FLOAT);
+        xSemaphoreTake(TWAI_mutex, portMAX_DELAY);
+        twai_transmit(&received_message, pdMS_TO_TICKS(MAX_TWAI_TIMEOUT));
+        xSemaphoreGive(TWAI_mutex);
+        printf("Sent position 260\n");
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        temp_union.a = 30.0f;
+        memcpy(&received_message.data[0], temp_union.bytes, BYTES_IN_FLOAT);
+        xSemaphoreTake(TWAI_mutex, portMAX_DELAY);
+        twai_transmit(&received_message, pdMS_TO_TICKS(MAX_TWAI_TIMEOUT));
+        xSemaphoreGive(TWAI_mutex);
+        printf("Sent position 30\n");
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }

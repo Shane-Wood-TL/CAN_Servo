@@ -4,16 +4,17 @@
 #include "../all_includes.h"
 #include "../supporting/get_shortest_angle.h"
 #include "../drivers/mp6550.h"
+#include "../interpolators/interpolation.h"
+#include "../interpolators/stepped_interpolator.h"
 
 #define DRIVE_MOTOR_TASK_DELAY 10
-#define INTEGRAL_ON_LARGE_CHANGE_RESET 10.0f
-#define INTEGRAL_LIMIT 100.0f
+#define INTEGRAL_ON_LARGE_CHANGE_RESET 50.0f
+#define INTEGRAL_LIMIT 500.0f
 #define ERROR_THRESHOLD 1.0f //angle
 #define VELOCITY_ERROR_THRESHOLD 0.5 
 #define M_to_S 1000.0f
-#define INTEGRAL_LIMIT 100.0f
 #define LOW_PASS_FILTER_COEFFICIENT 0.5f
-
+#define MAX_SPEED 4095
 
 extern mp6550 motor;
 

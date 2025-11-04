@@ -18,7 +18,7 @@ void read_position(void *pv){
             MAX_RAW_POSITION = raw_position_reading; //just to ensure correct behavoir across different setups
         }
         current_angle = raw_position_reading/(MAX_RAW_POSITION/MAX_ANGLE);
-        //printf("Angle: %f\n", current_angle);
+        printf("Angle: %f\n", current_angle);
         //read position
 
         int64_t now = esp_timer_get_time(); // microseconds

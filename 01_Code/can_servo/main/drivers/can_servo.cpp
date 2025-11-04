@@ -50,8 +50,9 @@ void can_servo::receive_message() {
         twai_message_t rxMessage;
 
         // Receive all available messages
+        xSemaphoreTake(TWAI_mutex, portMAX_DELAY);
         while (twai_receive(&rxMessage, 0) == ESP_OK) {
-            printf("got message\n");
+            //printf("got message\n");
             if (rxMessage.identifier == ((id << ID_OFFSET) | GET_INFO) or rxMessage.identifier == ((receive_all_id << ID_OFFSET) | GET_INFO)) {
                 printf("Received message with ID: 0x%03lX, Data Length: %d\n",
                    rxMessage.identifier, rxMessage.data_length_code);
@@ -197,6 +198,7 @@ void can_servo::receive_message() {
                 // Unhandled message ID
             }
         }
+        xSemaphoreGive(TWAI_mutex);
     }
 }
 
@@ -695,10 +697,11 @@ void can_servo::send_message(const command to_send, const uint8_t* message_conte
     }else{
         return;
     }
-    twai_message_t rx_message;
-    while(twai_receive(&rx_message,0)== ESP_OK){
-    
+
+
+    if (xQueueSend(transmit_queue, &tx_message, pdMS_TO_TICKS(100)) == pdPASS) {
+        printf("Sent message to queue\n");
+    } else {
+        printf("Queue full!\n");
     }
-    esp_err_t result = twai_transmit(&tx_message, pdMS_TO_TICKS(MAX_TWAI_TIMEOUT));
-    
 }

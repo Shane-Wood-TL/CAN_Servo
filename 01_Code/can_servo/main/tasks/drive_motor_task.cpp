@@ -1,6 +1,8 @@
 #include "../../include/tasks/drive_motor_task.h"
 
 void drive_motor(void *pv){
+    static int16_t max_change = 50;
+    static int16_t last_pass_motor_speed = 0;
     // PID state
     static float integral = 0.0f;
     static float last_error = 0.0f;
@@ -14,6 +16,10 @@ void drive_motor(void *pv){
 
     bool is_sleeping = true;
     motor.sleep();
+
+    
+    stepped_interpolator stepped_interpolator_instance(0.0, 500.0f);
+
     for(;;){          
         //drive motor
         xSemaphoreTake(motor_status_mutex, portMAX_DELAY);
@@ -58,43 +64,15 @@ void drive_motor(void *pv){
             if(current_motor_mode == VELOCITY_CONTROL){
                 xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
                 xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
-                float error = target_velocity;  
-                float dt = DRIVE_MOTOR_TASK_DELAY / M_to_S;  // time step in seconds
 
-                // Integral with anti-windup
-                vel_integral += error * dt;
-                if (vel_integral > INTEGRAL_LIMIT) vel_integral = INTEGRAL_LIMIT;
-                else if (vel_integral < -INTEGRAL_LIMIT) vel_integral = -INTEGRAL_LIMIT;
 
-                // Derivative with low-pass filtering
-                float derivative = (error - vel_last_error) / dt;
-                static float vel_last_filtered = 0.0f;
-                float filtered_derivative = LOW_PASS_FILTER_COEFFICIENT * derivative +
-                                            (1 - LOW_PASS_FILTER_COEFFICIENT) * vel_last_filtered;
-                vel_last_filtered = filtered_derivative;
-
-                vel_last_error = error;
-
-                // PID output
-                xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
-                float output = -(pid_P * error + pid_I * vel_integral + pid_D * filtered_derivative);
-                xSemaphoreGive(PID_values_mutex);
-
-                // Clamp output
-                if (output > MAX_ADC_INT) {
+                if (target_velocity * 500 > MAX_ADC_INT) {
                     last_motor_speed = MAX_ADC_INT;
-                } else if (output < -MAX_ADC_INT) {
+                } else if (target_velocity * 500 < -MAX_ADC_INT) {
                     last_motor_speed = -MAX_ADC_INT;
                 } else {
-                    last_motor_speed = (int16_t)output;
+                    last_motor_speed = (int16_t)(target_velocity * 500);
                 }
-
-                // Stop near zero velocity
-                if (fabsf(error) < VELOCITY_ERROR_THRESHOLD) {
-                    last_motor_speed = 0;
-                    motor.break_motor();
-                }
-
                 xSemaphoreGive(target_angle_velocity_mutex);
                 xSemaphoreGive(current_angle_velocity_mutex);
 
@@ -103,58 +81,40 @@ void drive_motor(void *pv){
                 xSemaphoreTake(current_angle_velocity_mutex, portMAX_DELAY);
                 xSemaphoreTake(target_angle_velocity_mutex, portMAX_DELAY);
                 xSemaphoreTake(motor_offset_mutex, portMAX_DELAY);
-                
+                const float Kp = 200.0f;     // proportional gain
+                const float Kd = 0.5f;
 
+                float error = get_shortest_angle(target_angle, current_angle);
+                static float last_error = 0.0f;
+                float derivative = error - last_error;
 
+                // Basic PD controller
+                float control_output = (Kp * error) + (Kd * derivative);
+
+                // Clamp output to allowable range
+                if (control_output > MAX_SPEED) control_output = MAX_SPEED;
+                if (control_output < -MAX_SPEED) control_output = -MAX_SPEED;
+
+                // Convert to integer speed for the motor driver
+                last_motor_speed = static_cast<int16_t>(control_output);
+                printf("%f\n", control_output);
                 
                 //printf("Current Angle: %f\n", current_angle);
                 //printf("Target Angle: %f\n", target_angle);
                 //printf("Offset Value: %d\n", motor_offset_value);
                 //float error = target_angle - current_angle;
-                float error = get_shortest_angle(target_angle, current_angle);
-                float dt = DRIVE_MOTOR_TASK_DELAY / M_to_S;  // time step in seconds
-                // Integral with anti-windup
-                integral += error * dt;
-                if (integral > INTEGRAL_LIMIT) integral = INTEGRAL_LIMIT;
-                else if (integral < -INTEGRAL_LIMIT) integral = -INTEGRAL_LIMIT;
-
-                // Derivative
-                float derivative = (error - last_error) / dt;
-                static float last_filtered = 0.0f; // Last filtered value for derivative
-                float filtered_derivative = LOW_PASS_FILTER_COEFFICIENT * derivative + (1 - LOW_PASS_FILTER_COEFFICIENT) * last_filtered;
-
-                last_error = error;
-
-                
-                if (fabsf(last_target - target_angle) > INTEGRAL_ON_LARGE_CHANGE_RESET) {
-                    integral = 0;
-                }
-                last_target = target_angle;
-
-                xSemaphoreTake(PID_values_mutex, portMAX_DELAY);
-                float output = pid_P * error + pid_I * integral + pid_D * filtered_derivative;
-                xSemaphoreGive(PID_values_mutex);
-
-                if(output > MAX_ADC_INT){
-                    last_motor_speed = MAX_ADC_INT;
-                }else if(output < -MAX_ADC_INT){
-                    last_motor_speed = -MAX_ADC_INT;
-                }else{
-                    last_motor_speed = (int16_t)output;
-                }
-                // Stop near target
-                if (fabsf(error) < ERROR_THRESHOLD) {
-                    last_motor_speed = 0;
-                    motor.break_motor();
-                }
 
                 xSemaphoreGive(motor_offset_mutex);
                 xSemaphoreGive(target_angle_velocity_mutex);
                 xSemaphoreGive(current_angle_velocity_mutex);
                 
-                printf("angle: %f, target: %f, error: %f, output: %f\n", current_angle, target_angle, error, output);  
+                //printf("angle: %f, target: %f, error: %f, output: %f\n", current_angle, target_angle, error, output);  
             }
-            motor.driveMotor(last_motor_speed);
+
+            stepped_interpolator_instance.set_target(last_motor_speed);
+
+            motor.driveMotor(stepped_interpolator_instance.get_position());
+            //printf("Motor Speed: %d\n", last_motor_speed);
         }
 
         vTaskDelay(pdMS_TO_TICKS(DRIVE_MOTOR_TASK_DELAY));        

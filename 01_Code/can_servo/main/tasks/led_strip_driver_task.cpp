@@ -1,6 +1,8 @@
 #include "../../include/tasks/led_strip_driver_task.h"
 
 #define max_led_brightness 128
+
+
 void led_strip_driver_task(void *pv){
     led_strip_driver led_strip(ONBOARD_RGB_LED, 1);
 

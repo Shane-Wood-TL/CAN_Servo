@@ -49,7 +49,7 @@ void can_bus(void *pv){
 
     static const twai_general_config_t g_config = {
         .controller_id = 0,
-        .mode = TWAI_MODE_NORMAL,
+        .mode = TWAI_MODE_NO_ACK, //TWAI_MODE_NORMAL,
         .tx_io = can_TX_pin,
         .rx_io = can_RX_pin,
         .clkout_io = TWAI_IO_UNUSED,
@@ -77,7 +77,7 @@ void can_bus(void *pv){
     can_servo can_bus_driver(node_id);
     for(;;){
         can_bus_driver.receive_message();
-        printf("CAN Bus Task running...\n");
+        //printf("CAN Bus Task running...\n");
         vTaskDelay(pdMS_TO_TICKS(CAN_BUS_TASK_DELAY));
     }
 }
